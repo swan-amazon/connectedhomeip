@@ -1,0 +1,83 @@
+# Copyright (c) 2023 Project CHIP Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build_overrides/build.gni")
+import("//build_overrides/chip.gni")
+import("//build_overrides/pigweed.gni")
+
+import("$dir_pw_build/python.gni")
+import("${chip_root}/build/chip/chip_codegen.gni")
+import("${chip_root}/build/chip/java/config.gni")
+import("${chip_root}/src/app/chip_data_model.gni")
+
+#pw_python_action("matter_zap_pregen") {
+#  _zap_file = "commissioner-clusters.zap"
+#  script = "${chip_root}/scripts/tools/zap/generate.py"
+#
+#  args = [
+#    "examples/minimal-commissioner-lib/data_model/commissioner-clusters.zap",
+#    "-t", "src/app/zap-templates/matter-idl.json",
+#  ]
+#
+#  inputs = [ "commissioner-clusters.zap", ]
+#  outputs = [ "$target_gen_dir/commissioner-clusters.matter" ]
+#  sources = [ _zap_file ]
+#}
+
+chip_data_model("data_model") {
+  zap_file = "commissioner-clusters.zap"
+
+  zap_pregenerated_dir = "${chip_root}/zzz_generated/controller-clusters/zap-generated"
+
+  allow_circular_includes_from = [ "${chip_root}/src/controller" ]
+
+#  deps = [ ":matter_zap_pregen", ]
+}
+
+chip_codegen("java-jni-generate") {
+  input = "commissioner-clusters.matter"
+  generator = "java"
+
+  outputs = [
+    "jni/AccessControlClient-InvokeSubscribeImpl.cpp",
+    "jni/AccessControlClient-ReadImpl.cpp",
+    "jni/AdministratorCommissioningClient-InvokeSubscribeImpl.cpp",
+    "jni/AdministratorCommissioningClient-ReadImpl.cpp",
+    "jni/BasicInformationClient-InvokeSubscribeImpl.cpp",
+    "jni/BasicInformationClient-ReadImpl.cpp",
+    "jni/DescriptorClient-InvokeSubscribeImpl.cpp",
+    "jni/DescriptorClient-ReadImpl.cpp",
+    "jni/GeneralCommissioningClient-InvokeSubscribeImpl.cpp",
+    "jni/GeneralCommissioningClient-ReadImpl.cpp",
+    "jni/IdentifyClient-InvokeSubscribeImpl.cpp",
+    "jni/IdentifyClient-ReadImpl.cpp",
+    "jni/LocalizationConfigurationClient-InvokeSubscribeImpl.cpp",
+    "jni/LocalizationConfigurationClient-ReadImpl.cpp",
+    "jni/NetworkCommissioningClient-InvokeSubscribeImpl.cpp",
+    "jni/NetworkCommissioningClient-ReadImpl.cpp",
+    "jni/OperationalCredentialsClient-InvokeSubscribeImpl.cpp",
+    "jni/OperationalCredentialsClient-ReadImpl.cpp",
+  ]
+
+  deps = [
+    ":data_model",
+  ]
+}
+
+source_set("java-jni-sources") {
+  deps = [
+    ":data_model",
+    ":java-jni-generate",
+  ]
+}

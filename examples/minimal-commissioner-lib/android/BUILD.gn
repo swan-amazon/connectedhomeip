@@ -1,0 +1,146 @@
+# Copyright (c) 2023 Project CHIP Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build_overrides/build.gni")
+import("//build_overrides/chip.gni")
+
+import("${build_root}/config/android_abi.gni")
+import("${chip_root}/build/chip/java/rules.gni")
+import("${chip_root}/build/chip/tools.gni")
+
+shared_library("jni") {
+  output_name = "libCHIPCommissioner"
+
+  sources = [
+    "${chip_root}/src/controller/java/AndroidCallbacks-JNI.cpp",
+    "${chip_root}/src/controller/java/AndroidCallbacks.cpp",
+    "${chip_root}/src/controller/java/AndroidCallbacks.h",
+    "${chip_root}/src/controller/java/AndroidClusterExceptions.cpp",
+    "${chip_root}/src/controller/java/AndroidClusterExceptions.h",
+    "${chip_root}/src/controller/java/AndroidCommissioningWindowOpener.cpp",
+    "${chip_root}/src/controller/java/AndroidCommissioningWindowOpener.h",
+    "${chip_root}/src/controller/java/AndroidCurrentFabricRemover.cpp",
+    "${chip_root}/src/controller/java/AndroidCurrentFabricRemover.h",
+    "${chip_root}/src/controller/java/AndroidDeviceControllerWrapper.cpp",
+    "${chip_root}/src/controller/java/AndroidDeviceControllerWrapper.h",
+    "${chip_root}/src/controller/java/AndroidOperationalCredentialsIssuer.cpp",
+    "${chip_root}/src/controller/java/AndroidOperationalCredentialsIssuer.h",
+    "${chip_root}/src/controller/java/BaseCHIPCluster-JNI.cpp",
+    "${chip_root}/src/controller/java/CHIPAttributeTLVValueDecoder.h",
+    "${chip_root}/src/controller/java/CHIPDefaultCallbacks.cpp",
+    "${chip_root}/src/controller/java/CHIPDefaultCallbacks.h",
+    "${chip_root}/src/controller/java/CHIPDeviceController-JNI.cpp",
+    "${chip_root}/src/controller/java/DeviceAttestationDelegateBridge.cpp",
+    "${chip_root}/src/controller/java/DeviceAttestationDelegateBridge.h",
+    "${chip_root}/examples/minimal-commissioner-lib/data_model/src/controller/java/zap-generated/CHIPClustersWrite-JNI.cpp",
+    "${chip_root}/examples/minimal-commissioner-lib/data_model/src/controller/java/zap-generated/CHIPInvokeCallbacks.h",
+    "${chip_root}/examples/minimal-commissioner-lib/data_model/src/controller/java/zap-generated/CHIPAttributeTLVValueDecoder.cpp",
+    "${chip_root}/examples/minimal-commissioner-lib/data_model/src/controller/java/zap-generated/CHIPReadCallbacks.cpp",
+    "${chip_root}/examples/minimal-commissioner-lib/data_model/src/controller/java/zap-generated/CHIPReadCallbacks.h",
+    "${chip_root}/examples/minimal-commissioner-lib/data_model/src/controller/java/zap-generated/CHIPInvokeCallbacks.cpp",
+    "${chip_root}/examples/minimal-commissioner-lib/data_model/src/controller/java/zap-generated/CHIPCallbackTypes.h",
+    "${chip_root}/examples/minimal-commissioner-lib/data_model/src/controller/java/zap-generated/CHIPEventTLVValueDecoder.cpp",
+  ]
+  deps = [
+    "${chip_root}/examples/minimal-commissioner-lib/data_model",
+    "${chip_root}/examples/minimal-commissioner-lib/data_model:java-jni-sources",
+    "${chip_root}/src/credentials:default_attestation_verifier",
+    "${chip_root}/src/lib/support/jsontlv",
+  ]
+
+  public_configs = [ "${chip_root}/src:includes" ]
+
+  output_dir = "${root_out_dir}/lib/jni/${android_abi}"
+
+  ldflags = [ "-Wl,--gc-sections" ]
+}
+
+java_prebuilt("android") {
+  jar_path = "${android_sdk_root}/platforms/android-21/android.jar"
+}
+
+android_library("java") {
+  output_name = "CHIPCommissioner.jar"
+
+  deps = [
+    "${chip_root}/third_party/java_deps:annotation",
+    ":android",
+  ]
+
+  data_deps = [
+    ":jni",
+    "${chip_root}/build/chip/java:shared_cpplib",
+  ]
+
+  sources = [
+    "${chip_root}/src/controller/java/src/chip/clusterinfo/ClusterCommandCallback.java",
+    "${chip_root}/src/controller/java/src/chip/clusterinfo/ClusterInfo.java",
+    "${chip_root}/src/controller/java/src/chip/clusterinfo/CommandParameterInfo.java",
+    "${chip_root}/src/controller/java/src/chip/clusterinfo/CommandResponseInfo.java",
+    "${chip_root}/src/controller/java/src/chip/clusterinfo/DelegatedClusterCallback.java",
+    "${chip_root}/src/controller/java/src/chip/clusterinfo/InteractionInfo.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/AttestationInfo.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/CSRInfo.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/ChipClusterException.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/ChipCommandType.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/ChipDeviceController.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/ChipDeviceControllerException.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/ControllerParams.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/DeviceAttestationDelegate.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/DiscoveredDevice.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/GetConnectedDeviceCallbackJni.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/KeypairDelegate.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/NetworkCredentials.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/NetworkLocation.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/OpenCommissioningCallback.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/OperationalKeyConfig.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/PaseVerifierParams.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/ReportCallback.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/ReportCallbackJni.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/ReportEventCallback.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/ReportEventCallbackJni.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/ResubscriptionAttemptCallback.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/SubscriptionEstablishedCallback.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/UnpairDeviceCallback.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/model/AttributeState.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/model/ChipAttributePath.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/model/ChipEventPath.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/model/ChipPathId.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/model/ClusterState.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/model/EndpointState.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/model/EventState.java",
+    "${chip_root}/src/controller/java/src/chip/devicecontroller/model/NodeState.java",
+    "${chip_root}/src/controller/java/zap-generated/chip/devicecontroller/ChipClusters.java",
+    "${chip_root}/src/controller/java/zap-generated/chip/devicecontroller/ChipEventStructs.java",
+    "${chip_root}/src/controller/java/zap-generated/chip/devicecontroller/ChipIdLookup.java",
+    "${chip_root}/src/controller/java/zap-generated/chip/devicecontroller/ChipStructs.java",
+    "${chip_root}/src/controller/java/zap-generated/chip/devicecontroller/ClusterInfoMapping.java",
+    "${chip_root}/src/controller/java/zap-generated/chip/devicecontroller/ClusterReadMapping.java",
+    "${chip_root}/src/controller/java/zap-generated/chip/devicecontroller/ClusterWriteMapping.java",
+  ]
+
+  javac_flags = [
+    "-Xlint:deprecation",
+    "-parameters",  # Store infomation about method parameters
+  ]
+}
+
+group("default") {
+  deps = [
+    ":jni",
+    ":java",
+    "${chip_root}/src/setup_payload/java:jni",
+    "${chip_root}/src/setup_payload/java:java"
+  ]
+}

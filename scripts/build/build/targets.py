@@ -114,6 +114,7 @@ def BuildHostTarget():
         TargetPart('thermostat', app=HostApp.THERMOSTAT),
         # TODO: controllers depending on a datamodel is odd. For now fix compile dependencies on ember.
         TargetPart('java-matter-controller', app=HostApp.JAVA_MATTER_CONTROLLER),
+        TargetPart('java-min-matter-controller', app=HostApp.JAVA_MATTER_CONTROLLER),
         TargetPart('kotlin-matter-controller', app=HostApp.KOTLIN_MATTER_CONTROLLER),
         TargetPart('minmdns', app=HostApp.MIN_MDNS),
         TargetPart('light', app=HostApp.LIGHT),

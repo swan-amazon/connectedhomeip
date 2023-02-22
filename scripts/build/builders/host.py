@@ -74,6 +74,7 @@ class HostApp(Enum):
     FABRIC_BRIDGE = auto()
     FABRIC_SYNC = auto()
     JAVA_MATTER_CONTROLLER = auto()
+    JAVA_MIN_MATTER_CONTROLLER = auto()
     KOTLIN_MATTER_CONTROLLER = auto()
     CONTACT_SENSOR = auto()
     DISHWASHER = auto()
