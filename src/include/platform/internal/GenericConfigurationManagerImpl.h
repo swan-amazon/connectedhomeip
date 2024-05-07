@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020-2022 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *    Copyright (c) 2019-2020 Google LLC.
  *    Copyright (c) 2018 Nest Labs, Inc.
  *
@@ -81,6 +81,7 @@ public:
 #endif
     CHIP_ERROR GetFailSafeArmed(bool & val) override;
     CHIP_ERROR SetFailSafeArmed(bool val) override;
+
     CHIP_ERROR GetBLEDeviceIdentificationInfo(Ble::ChipBLEDeviceIdentificationInfo & deviceIdInfo) override;
     bool IsCommissionableDeviceTypeEnabled() override;
     CHIP_ERROR GetDeviceTypeId(uint32_t & deviceType) override;
@@ -94,6 +95,11 @@ public:
     CHIP_ERROR StoreRegulatoryLocation(uint8_t location) override;
     CHIP_ERROR GetCountryCode(char * buf, size_t bufSize, size_t & codeLen) override;
     CHIP_ERROR StoreCountryCode(const char * code, size_t codeLen) override;
+    CHIP_ERROR GetTCAcceptedVersion(uint16_t &value) override;
+    CHIP_ERROR GetTCMinRequiredVersion(uint16_t &value) override;
+    CHIP_ERROR GetTCAcknowledgements(uint16_t &value) override;
+    CHIP_ERROR GetTCAcknowledgementsRequired(uint16_t &value) override;
+    CHIP_ERROR StoreTCAcknowledgements(uint16_t tcVersion, uint16_t tcUserResponse) override;
     CHIP_ERROR GetRebootCount(uint32_t & rebootCount) override;
     CHIP_ERROR StoreRebootCount(uint32_t rebootCount) override;
     CHIP_ERROR GetTotalOperationalHours(uint32_t & totalOperationalHours) override;
@@ -136,11 +142,13 @@ protected:
     // Methods to read and write configuration values, as well as run the configuration unit test.
     typedef typename ConfigClass::Key Key;
     virtual CHIP_ERROR ReadConfigValue(Key key, bool & val)                                        = 0;
+    virtual CHIP_ERROR ReadConfigValue(Key key, uint16_t & val)                                    = 0;
     virtual CHIP_ERROR ReadConfigValue(Key key, uint32_t & val)                                    = 0;
     virtual CHIP_ERROR ReadConfigValue(Key key, uint64_t & val)                                    = 0;
     virtual CHIP_ERROR ReadConfigValueStr(Key key, char * buf, size_t bufSize, size_t & outLen)    = 0;
     virtual CHIP_ERROR ReadConfigValueBin(Key key, uint8_t * buf, size_t bufSize, size_t & outLen) = 0;
     virtual CHIP_ERROR WriteConfigValue(Key key, bool val)                                         = 0;
+    virtual CHIP_ERROR WriteConfigValue(Key key, uint16_t val)                                     = 0;
     virtual CHIP_ERROR WriteConfigValue(Key key, uint32_t val)                                     = 0;
     virtual CHIP_ERROR WriteConfigValue(Key key, uint64_t val)                                     = 0;
     virtual CHIP_ERROR WriteConfigValueStr(Key key, const char * str)                              = 0;

@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020-2022 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *    Copyright (c) 2019-2020 Google LLC.
  *    Copyright (c) 2018 Nest Labs, Inc.
  *    All rights reserved.
@@ -62,17 +62,22 @@ const PosixConfig::Key PosixConfig::kConfigKey_Spake2pSalt           = { kConfig
 const PosixConfig::Key PosixConfig::kConfigKey_Spake2pVerifier       = { kConfigNamespace_ChipFactory, "verifier" };
 const PosixConfig::Key PosixConfig::kConfigKey_VendorId              = { kConfigNamespace_ChipFactory, "vendor-id" };
 const PosixConfig::Key PosixConfig::kConfigKey_ProductId             = { kConfigNamespace_ChipFactory, "product-id" };
+const PosixConfig::Key PosixConfig::kConfigKey_UniqueId              = { kConfigNamespace_ChipFactory, "unique-id" };
+
 
 // Keys stored in the Chip-config namespace
-const PosixConfig::Key PosixConfig::kConfigKey_ServiceConfig      = { kConfigNamespace_ChipConfig, "service-config" };
-const PosixConfig::Key PosixConfig::kConfigKey_PairedAccountId    = { kConfigNamespace_ChipConfig, "account-id" };
-const PosixConfig::Key PosixConfig::kConfigKey_ServiceId          = { kConfigNamespace_ChipConfig, "service-id" };
-const PosixConfig::Key PosixConfig::kConfigKey_LastUsedEpochKeyId = { kConfigNamespace_ChipConfig, "last-ek-id" };
-const PosixConfig::Key PosixConfig::kConfigKey_FailSafeArmed      = { kConfigNamespace_ChipConfig, "fail-safe-armed" };
-const PosixConfig::Key PosixConfig::kConfigKey_RegulatoryLocation = { kConfigNamespace_ChipConfig, "regulatory-location" };
-const PosixConfig::Key PosixConfig::kConfigKey_CountryCode        = { kConfigNamespace_ChipConfig, "country-code" };
-const PosixConfig::Key PosixConfig::kConfigKey_LocationCapability = { kConfigNamespace_ChipConfig, "location-capability" };
-const PosixConfig::Key PosixConfig::kConfigKey_UniqueId           = { kConfigNamespace_ChipFactory, "unique-id" };
+const PosixConfig::Key PosixConfig::kConfigKey_ServiceConfig              = { kConfigNamespace_ChipConfig, "service-config" };
+const PosixConfig::Key PosixConfig::kConfigKey_PairedAccountId            = { kConfigNamespace_ChipConfig, "account-id" };
+const PosixConfig::Key PosixConfig::kConfigKey_ServiceId                  = { kConfigNamespace_ChipConfig, "service-id" };
+const PosixConfig::Key PosixConfig::kConfigKey_LastUsedEpochKeyId         = { kConfigNamespace_ChipConfig, "last-ek-id" };
+const PosixConfig::Key PosixConfig::kConfigKey_FailSafeArmed              = { kConfigNamespace_ChipConfig, "fail-safe-armed" };
+const PosixConfig::Key PosixConfig::kConfigKey_RegulatoryLocation         = { kConfigNamespace_ChipConfig, "regulatory-location" };
+const PosixConfig::Key PosixConfig::kConfigKey_CountryCode                = { kConfigNamespace_ChipConfig, "country-code" };
+const PosixConfig::Key PosixConfig::kConfigKey_LocationCapability         = { kConfigNamespace_ChipConfig, "location-capability" };
+const PosixConfig::Key PosixConfig::kConfigKey_TCAcceptedVersion          = { kConfigNamespace_ChipConfig, "tc-accepted-version" };
+const PosixConfig::Key PosixConfig::kConfigKey_TCMinRequiredVersion       = { kConfigNamespace_ChipConfig, "tc-min-required-version" };
+const PosixConfig::Key PosixConfig::kConfigKey_TCAcknowledgements         = { kConfigNamespace_ChipConfig, "tc-acknowledgements" };
+const PosixConfig::Key PosixConfig::kConfigKey_TCAcknowledgementsRequired = { kConfigNamespace_ChipConfig, "tc-acknowledgements-required" };
 
 // Keys stored in the Chip-counters namespace
 const PosixConfig::Key PosixConfig::kCounterKey_RebootCount           = { kConfigNamespace_ChipCounters, "reboot-count" };

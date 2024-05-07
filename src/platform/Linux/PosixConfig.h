@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020-2022 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -77,6 +77,10 @@ public:
     static const Key kConfigKey_Spake2pVerifier;
     static const Key kConfigKey_VendorId;
     static const Key kConfigKey_ProductId;
+    static const Key kConfigKey_TCAcceptedVersion;
+    static const Key kConfigKey_TCMinRequiredVersion;
+    static const Key kConfigKey_TCAcknowledgements;
+    static const Key kConfigKey_TCAcknowledgementsRequired;
 
     static const Key kCounterKey_RebootCount;
     static const Key kCounterKey_UpTime;

@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020-2022 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *    Copyright (c) 2019-2020 Google LLC.
  *    Copyright (c) 2018 Nest Labs, Inc.
  *
@@ -104,7 +104,10 @@ public:
     virtual CHIP_ERROR GetSoftwareVersionString(char * buf, size_t bufSize)                = 0;
     virtual CHIP_ERROR GetSoftwareVersion(uint32_t & softwareVer)                          = 0;
     virtual CHIP_ERROR GetFirmwareBuildChipEpochTime(System::Clock::Seconds32 & buildTime) = 0;
-    virtual CHIP_ERROR SetFirmwareBuildChipEpochTime(System::Clock::Seconds32 buildTime) { return CHIP_ERROR_NOT_IMPLEMENTED; }
+    virtual CHIP_ERROR SetFirmwareBuildChipEpochTime(System::Clock::Seconds32 buildTime)
+    {
+        return CHIP_ERROR_NOT_IMPLEMENTED;
+    }
 #if CHIP_ENABLE_ROTATING_DEVICE_ID && defined(CHIP_DEVICE_CONFIG_ROTATING_DEVICE_ID_UNIQUE_ID)
     // Lifetime counter is monotonic counter that is incremented upon each commencement of advertising
     virtual CHIP_ERROR GetLifetimeCounter(uint16_t & lifetimeCounter)              = 0;
@@ -131,6 +134,12 @@ public:
     virtual CHIP_ERROR GenerateUniqueId(char * buf, size_t bufSize)                    = 0;
     virtual CHIP_ERROR GetFailSafeArmed(bool & val)                                    = 0;
     virtual CHIP_ERROR SetFailSafeArmed(bool val)                                      = 0;
+
+    virtual CHIP_ERROR GetTCAcceptedVersion(uint16_t & value)                               = 0;
+    virtual CHIP_ERROR GetTCMinRequiredVersion(uint16_t & value)                            = 0;
+    virtual CHIP_ERROR GetTCAcknowledgements(uint16_t & value)                              = 0;
+    virtual CHIP_ERROR GetTCAcknowledgementsRequired(uint16_t & value)                      = 0;
+    virtual CHIP_ERROR StoreTCAcknowledgements(uint16_t tcVersion, uint16_t tcUserResponse) = 0;
 
     virtual CHIP_ERROR GetBLEDeviceIdentificationInfo(Ble::ChipBLEDeviceIdentificationInfo & deviceIdInfo) = 0;
 

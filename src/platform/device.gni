@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Project CHIP Authors
+# Copyright (c) 2020-2024 Project CHIP Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -223,6 +223,17 @@ declare_args() {
 
   # If true, builds the tv-casting-common static lib
   build_tv_casting_common_a = false
+}
+
+declare_args() {
+  # If non-zero, the currently acknowledged terms and conditions bitfield
+  chip_tc_accepted_acknowledgements = 0
+  # If non-zero, the currently acknowledged terms and conditions version
+  chip_tc_accepted_version = 0
+  # If non-zero, is the terms and conditions required acknowledgements bitfield
+  chip_tc_required_acknowledgements = 0
+  # If non-zero, is the terms and conditions required version
+  chip_tc_required_version = 0
 }
 
 assert(!chip_disable_platform_kvs || chip_device_platform == "darwin",
