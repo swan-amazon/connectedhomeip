@@ -745,6 +745,32 @@ Protocols::InteractionModel::Status Get(chip::EndpointId endpoint, uint64_t * va
 Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, uint64_t value);
 } // namespace Breadcrumb
 
+namespace TCAcceptedVersion {
+Protocols::InteractionModel::Status Get(chip::EndpointId endpoint, DataModel::Nullable<uint16_t> & value); // int16u
+Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, uint16_t value);
+Protocols::InteractionModel::Status SetNull(chip::EndpointId endpoint);
+Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, const chip::app::DataModel::Nullable<uint16_t> & value);
+} // namespace TCAcceptedVersion
+
+namespace TCMinRequiredVersion {
+Protocols::InteractionModel::Status Get(chip::EndpointId endpoint, DataModel::Nullable<uint16_t> & value); // int16u
+Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, uint16_t value);
+Protocols::InteractionModel::Status SetNull(chip::EndpointId endpoint);
+Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, const chip::app::DataModel::Nullable<uint16_t> & value);
+} // namespace TCMinRequiredVersion
+
+namespace TCAcknowledgements {
+Protocols::InteractionModel::Status Get(chip::EndpointId endpoint, uint16_t * value); // bitmap16
+Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, uint16_t value);
+} // namespace TCAcknowledgements
+
+namespace TCAcknowledgementsRequired {
+Protocols::InteractionModel::Status Get(chip::EndpointId endpoint, DataModel::Nullable<bool> & value); // boolean
+Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, bool value);
+Protocols::InteractionModel::Status SetNull(chip::EndpointId endpoint);
+Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, const chip::app::DataModel::Nullable<bool> & value);
+} // namespace TCAcknowledgementsRequired
+
 namespace FeatureMap {
 Protocols::InteractionModel::Status Get(chip::EndpointId endpoint, uint32_t * value); // bitmap32
 Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, uint32_t value);
