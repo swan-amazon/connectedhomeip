@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-Copyright (c) 2021 Project CHIP Authors
+Copyright (c) 2021-2024 Project CHIP Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,6 +23,9 @@ limitations under the License.
     <item name="InvalidAuthentication" value="0x2"/>
     <item name="NoFailSafe" value="0x3"/>
     <item name="BusyWithOtherAdmin" value="0x4"/>
+    <item name="RequiredTCNotAccepted" value="0x5"/>
+    <item name="TCAcknowledgementsNotReceived" value="0x6"/>
+    <item name="TCMinVersionNotMet" value="0x7"/>
   </enum>
   <enum name="RegulatoryLocationTypeEnum" type="enum8">
     <cluster code="0x0030"/>
@@ -50,6 +53,14 @@ limitations under the License.
     <attribute side="server" code="0x02" define="REGULATORY_CONFIG" type="RegulatoryLocationTypeEnum" writable="false" optional="false">RegulatoryConfig</attribute>
     <attribute side="server" code="0x03" define="LOCATION_CAPABILITY" type="RegulatoryLocationTypeEnum" writable="false" optional="false">LocationCapability</attribute>
     <attribute side="server" code="0x04" define="SUPPORTS_CONCURRENT_CONNECTION" type="boolean" writable="false" default="1" optional="false">SupportsConcurrentConnection</attribute>
+    <attribute side="server" code="0x05" define="TC_ACCEPTED_VERSION" type="int16u" min="0x0000" max="0xFFFF" writable="false" optional="true" isNullable="true">TCAcceptedVersion</attribute>
+    <attribute side="server" code="0x06" define="TC_MIN_REQUIRED_VERSION" type="int16u" min="0x0000" max="0xFFFF" writable="false" optional="true" isNullable="true">TCMinRequiredVersion</attribute>
+    <attribute side="server" code="0x07" define="TC_ACKNOWLEDGEMENTS" type="bitmap16" min="0x0000" max="0xFFFF" writable="true" default="0x0000" optional="true">
+      <description>TCAcknowledgements</description>
+      <access op="read" privilege="view"/>
+      <access op="write" privilege="administer"/>
+    </attribute>
+    <attribute side="server" code="0x08" define="TC_ACKNOWLEDGEMENTS_REQUIRED" type="boolean" writable="false" optional="true" isNullable="true">TCAcknowledgementsRequired</attribute>
 
     <command source="client" code="0x00" name="ArmFailSafe" response="ArmFailSafeResponse" optional="false" cli="chip fabric_commissioning armfailsafe">
       <description>Arm the persistent fail-safe timer with an expiry time of now + ExpiryLengthSeconds using device clock</description>
@@ -83,5 +94,22 @@ limitations under the License.
       <arg name="ErrorCode" type="CommissioningErrorEnum"/>
       <arg name="DebugText" type="char_string"/>
     </command>
+    <command source="client" code="0x06" name="SetTCAcknowledgements" optional="true" response="SetTCAcknowledgementsResponse" cli="chip fabric_commissioning settcacknowledgements">
+      <description>Set the acknowledged Terms and Conditions</description>
+      <arg name="TCVersion" type="int16u" min="0x0000" max="0xFFFF"/>
+      <arg name="TCUserResponse" type="bitmap16" min="0x0000" max="0xFFFF"/>
+      <access op="invoke" privilege="administer"/>
+    </command>
+    <command source="server" code="0x07" name="SetTCAcknowledgementsResponse" optional="true" cli="chip fabric_commissioning settcacknowledgementsresponse">
+      <description>Indicates to client whether TCAcknowledgements command satisfied all of the required terms and conditions</description>
+      <arg name="ErrorCode" type="CommissioningErrorEnum"/>
+      <arg name="DebugText" type="char_string"/>
+    </command>
   </cluster>
+
+  <bitmap name="Feature" type="bitmap32">
+    <cluster code="0x0030"/>
+    <field name="Terms and Conditions" mask="0x1"/>
+  </bitmap>
+
 </configurator>
