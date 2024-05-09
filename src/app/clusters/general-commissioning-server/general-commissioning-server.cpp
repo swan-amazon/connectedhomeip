@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright (c) 2021 Project CHIP Authors
+ *    Copyright (c) 2021-2024 Project CHIP Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -66,7 +66,8 @@ public:
     CHIP_ERROR Read(const ConcreteReadAttributePath & aPath, AttributeValueEncoder & aEncoder) override;
 
 private:
-    CHIP_ERROR ReadIfSupported(CHIP_ERROR (ConfigurationManager::*getter)(uint8_t &), AttributeValueEncoder & aEncoder);
+    template <typename T>
+    CHIP_ERROR ReadIfSupported(CHIP_ERROR (ConfigurationManager::*getter)(T &), AttributeValueEncoder & aEncoder);
     CHIP_ERROR ReadBasicCommissioningInfo(AttributeValueEncoder & aEncoder);
     CHIP_ERROR ReadSupportsConcurrentConnection(AttributeValueEncoder & aEncoder);
 };
@@ -95,17 +96,29 @@ CHIP_ERROR GeneralCommissioningAttrAccess::Read(const ConcreteReadAttributePath 
     case SupportsConcurrentConnection::Id: {
         return ReadSupportsConcurrentConnection(aEncoder);
     }
-    default: {
-        break;
+    case TCAcceptedVersion::Id: {
+        return ReadIfSupported(&ConfigurationManager::GetTCAcceptedVersion, aEncoder);
     }
+    case TCMinRequiredVersion::Id: {
+        return ReadIfSupported(&ConfigurationManager::GetTCMinRequiredVersion, aEncoder);
+    }
+    case TCAcknowledgements::Id: {
+        return ReadIfSupported(&ConfigurationManager::GetTCAcknowledgements, aEncoder);
+    }
+    case TCAcknowledgementsRequired::Id: {
+        return ReadIfSupported(&ConfigurationManager::GetTCAcknowledgementsRequired, aEncoder);
+    }
+    default:
+        break;
     }
     return CHIP_NO_ERROR;
 }
 
-CHIP_ERROR GeneralCommissioningAttrAccess::ReadIfSupported(CHIP_ERROR (ConfigurationManager::*getter)(uint8_t &),
+template <typename T>
+CHIP_ERROR GeneralCommissioningAttrAccess::ReadIfSupported(CHIP_ERROR (ConfigurationManager::*getter)(T &),
                                                            AttributeValueEncoder & aEncoder)
 {
-    uint8_t data;
+    T data;
     CHIP_ERROR err = (DeviceLayer::ConfigurationMgr().*getter)(data);
     if (err == CHIP_ERROR_UNSUPPORTED_CHIP_FEATURE)
     {
@@ -214,9 +227,10 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
 {
     MATTER_TRACE_SCOPE("CommissioningComplete", "GeneralCommissioning");
 
-    DeviceControlServer * devCtrl = &DeviceLayer::DeviceControlServer::DeviceControlSvr();
-    auto & failSafe               = Server::GetInstance().GetFailSafeContext();
-    auto & fabricTable            = Server::GetInstance().GetFabricTable();
+    DeviceControlServer * devCtrl    = &DeviceLayer::DeviceControlServer::DeviceControlSvr();
+    auto & failSafe                  = Server::GetInstance().GetFailSafeContext();
+    auto & fabricTable               = Server::GetInstance().GetFabricTable();
+    auto & termsAndConditionsManager = Server::GetInstance().GetTermsAndConditionsManager();
 
     ChipLogProgress(FailSafe, "GeneralCommissioning: Received CommissioningComplete");
 
@@ -239,34 +253,58 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
         }
         else
         {
-            if (failSafe.NocCommandHasBeenInvoked())
+            CHIP_ERROR err;
+
+            // Fetch the terms and conditions acknowledgements for verification
+            uint16_t tcAcceptedVersion = 0U, tcMinRequiredVersion = 0U, tcAcknowledgements = 0U, tcAcknowledgementsRequired = 0U;
+
+            err = termsAndConditionsManager.GetTCAcceptedVersion(tcAcceptedVersion);
+            CheckSuccess(err, Failure);
+
+            err = termsAndConditionsManager.GetTCMinRequiredVersion(tcMinRequiredVersion);
+            CheckSuccess(err, Failure);
+
+            err = termsAndConditionsManager.GetTCAcknowledgements(tcAcknowledgements);
+            CheckSuccess(err, Failure);
+
+            err = termsAndConditionsManager.GetTCAcknowledgementsRequired(tcAcknowledgementsRequired);
+            CheckSuccess(err, Failure);
+
+            if (tcAcknowledgementsRequired != (tcAcknowledgementsRequired & tcAcknowledgements))
             {
-                CHIP_ERROR err = fabricTable.CommitPendingFabricData();
-                if (err != CHIP_NO_ERROR)
-                {
-                    // No need to revert on error: CommitPendingFabricData always reverts if not fully successful.
-                    ChipLogError(FailSafe, "GeneralCommissioning: Failed to commit pending fabric data: %" CHIP_ERROR_FORMAT,
-                                 err.Format());
-                }
-                else
-                {
-                    ChipLogProgress(FailSafe, "GeneralCommissioning: Successfully commited pending fabric data");
-                }
-                CheckSuccess(err, Failure);
+                ChipLogError(AppServer, "Required terms and conditions have not been accepted");
+                Breadcrumb::Set(commandPath.mEndpointId, 0);
+                response.errorCode = CommissioningErrorEnum::kRequiredTCNotAccepted;
             }
 
-            /*
-             * Pass fabric of commissioner to DeviceControlSvr.
-             * This allows device to send messages back to commissioner.
-             * Once bindings are implemented, this may no longer be needed.
-             */
-            failSafe.DisarmFailSafe();
-            CheckSuccess(
-                devCtrl->PostCommissioningCompleteEvent(handle->AsSecureSession()->GetPeerNodeId(), handle->GetFabricIndex()),
-                Failure);
+            else if (tcAcceptedVersion < tcMinRequiredVersion)
+            {
+                ChipLogError(AppServer, "Minimium terms and conditions version has not been accepted");
+                Breadcrumb::Set(commandPath.mEndpointId, 0);
+                response.errorCode = CommissioningErrorEnum::kTCMinVersionNotMet;
+            }
 
-            Breadcrumb::Set(commandPath.mEndpointId, 0);
-            response.errorCode = CommissioningErrorEnum::kOk;
+            else
+            {
+                if (failSafe.NocCommandHasBeenInvoked())
+                {
+                    err = fabricTable.CommitPendingFabricData();
+                    CheckSuccess(err, Failure);
+                    ChipLogProgress(FailSafe, "GeneralCommissioning: Successfully commited pending fabric data");
+                }
+
+                /*
+                 * Pass fabric of commissioner to DeviceControlSvr.
+                 * This allows device to send messages back to commissioner.
+                 * Once bindings are implemented, this may no longer be needed.
+                 */
+                failSafe.DisarmFailSafe();
+                err = devCtrl->PostCommissioningCompleteEvent(handle->AsSecureSession()->GetPeerNodeId(), handle->GetFabricIndex());
+                CheckSuccess(err, Failure);
+
+                Breadcrumb::Set(commandPath.mEndpointId, 0);
+                response.errorCode = CommissioningErrorEnum::kOk;
+            }
         }
     }
 
@@ -325,6 +363,22 @@ bool emberAfGeneralCommissioningClusterSetRegulatoryConfigCallback(app::CommandH
 
     commandObj->AddResponse(commandPath, response);
 
+    return true;
+}
+
+bool emberAfGeneralCommissioningClusterSetTCAcknowledgementsCallback(
+    chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
+    const chip::app::Clusters::GeneralCommissioning::Commands::SetTCAcknowledgements::DecodableType & commandData)
+{
+    MATTER_TRACE_SCOPE("SetTCAcknowledgements", "GeneralCommissioning");
+    auto & termsAndConditionsManager = Server::GetInstance().GetTermsAndConditionsManager();
+
+    Commands::SetTCAcknowledgementsResponse::Type response;
+
+    CheckSuccess(termsAndConditionsManager.SetTCAcknowledgements(commandData.TCVersion, commandData.TCUserResponse), Failure);
+    response.errorCode = CommissioningErrorEnum::kOk;
+
+    commandObj->AddResponse(commandPath, response);
     return true;
 }
 

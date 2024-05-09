@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020-2022 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *    Copyright (c) 2019-2020 Google LLC.
  *    Copyright (c) 2018 Nest Labs, Inc.
  *
@@ -580,6 +580,48 @@ template <class ConfigClass>
 CHIP_ERROR GenericConfigurationManagerImpl<ConfigClass>::SetFailSafeArmed(bool val)
 {
     return WriteConfigValue(ConfigClass::kConfigKey_FailSafeArmed, val);
+}
+
+template <class ConfigClass>
+CHIP_ERROR GenericConfigurationManagerImpl<ConfigClass>::GetTCAcceptedVersion(uint16_t & value)
+{
+    return ReadConfigValue(ConfigClass::kConfigKey_TCAcceptedVersion, value);
+}
+
+template <class ConfigClass>
+CHIP_ERROR GenericConfigurationManagerImpl<ConfigClass>::GetTCMinRequiredVersion(uint16_t & value)
+{
+    return ReadConfigValue(ConfigClass::kConfigKey_TCMinRequiredVersion, value);
+}
+
+template <class ConfigClass>
+CHIP_ERROR GenericConfigurationManagerImpl<ConfigClass>::GetTCAcknowledgements(uint16_t & value)
+{
+    return ReadConfigValue(ConfigClass::kConfigKey_TCAcknowledgements, value);
+}
+
+template <class ConfigClass>
+CHIP_ERROR GenericConfigurationManagerImpl<ConfigClass>::GetTCAcknowledgementsRequired(uint16_t & value)
+{
+    return ReadConfigValue(ConfigClass::kConfigKey_TCAcknowledgementsRequired, value);
+}
+
+template <class ConfigClass>
+CHIP_ERROR GenericConfigurationManagerImpl<ConfigClass>::StoreTCAcknowledgements(uint16_t tcVersion, uint16_t tcUserResponse)
+{
+    CHIP_ERROR err;
+
+    err = WriteConfigValue(ConfigClass::kConfigKey_TCAcceptedVersion, 0U);
+    SuccessOrExit(err);
+
+    err = WriteConfigValue(ConfigClass::kConfigKey_TCAcknowledgements, tcUserResponse);
+    SuccessOrExit(err);
+
+    err = WriteConfigValue(ConfigClass::kConfigKey_TCAcceptedVersion, tcVersion);
+    SuccessOrExit(err);
+
+exit:
+    return err;
 }
 
 template <class ConfigClass>

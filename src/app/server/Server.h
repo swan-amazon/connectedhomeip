@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@
 #include <app/server/AppDelegate.h>
 #include <app/server/CommissioningWindowManager.h>
 #include <app/server/DefaultAclStorage.h>
+#include <app/server/TermsAndConditionsManager.h>
 #include <credentials/CertificateValidityPolicy.h>
 #include <credentials/FabricTable.h>
 #include <credentials/GroupDataProvider.h>
@@ -357,6 +358,8 @@ public:
 
     app::FailSafeContext & GetFailSafeContext() { return mFailSafeContext; }
 
+    app::TermsAndConditionsManager & GetTermsAndConditionsManager() { return mTermsAndConditionsManager; }
+
     TestEventTriggerDelegate * GetTestEventTriggerDelegate() { return mTestEventTriggerDelegate; }
 
     Crypto::OperationalKeystore * GetOperationalKeystore() { return mOperationalKeystore; }
@@ -636,6 +639,7 @@ private:
     Crypto::OperationalKeystore * mOperationalKeystore;
     Credentials::OperationalCertificateStore * mOpCertStore;
     app::FailSafeContext mFailSafeContext;
+    app::TermsAndConditionsManager mTermsAndConditionsManager;
 
     bool mIsDnssdReady = false;
     uint16_t mOperationalServicePort;

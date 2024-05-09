@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *    Copyright (c) 2018 Nest Labs, Inc.
  *    All rights reserved.
  *
@@ -115,6 +115,34 @@ CHIP_ERROR ConfigurationManagerImpl::Init()
     {
         uint32_t location = to_underlying(chip::app::Clusters::GeneralCommissioning::RegulatoryLocationTypeEnum::kIndoorOutdoor);
         err               = WriteConfigValue(PosixConfig::kConfigKey_LocationCapability, location);
+        SuccessOrExit(err);
+    }
+
+    if (!PosixConfig::ConfigValueExists(PosixConfig::kConfigKey_TCAcceptedVersion))
+    {
+        uint16_t tcAcceptedVersion = CHIP_CONFIG_TC_ACCEPTED_VERSION;
+        err                        = WriteConfigValue(PosixConfig::kConfigKey_TCAcceptedVersion, tcAcceptedVersion);
+        SuccessOrExit(err);
+    }
+
+    if (!PosixConfig::ConfigValueExists(PosixConfig::kConfigKey_TCMinRequiredVersion))
+    {
+        uint16_t tcMinRequiredVersion = CHIP_CONFIG_TC_REQUIRED_VERSION;
+        err                           = WriteConfigValue(PosixConfig::kConfigKey_TCMinRequiredVersion, tcMinRequiredVersion);
+        SuccessOrExit(err);
+    }
+
+    if (!PosixConfig::ConfigValueExists(PosixConfig::kConfigKey_TCAcknowledgements))
+    {
+        uint16_t tcAcknowledgements = CHIP_CONFIG_TC_ACCEPTED_ACKNOWLEDGEMENTS;
+        err                         = WriteConfigValue(PosixConfig::kConfigKey_TCAcknowledgements, tcAcknowledgements);
+        SuccessOrExit(err);
+    }
+
+    if (!PosixConfig::ConfigValueExists(PosixConfig::kConfigKey_TCAcknowledgementsRequired))
+    {
+        uint16_t tcAcknowledgementsRequired = CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS;
+        err = WriteConfigValue(PosixConfig::kConfigKey_TCAcknowledgementsRequired, tcAcknowledgementsRequired);
         SuccessOrExit(err);
     }
 

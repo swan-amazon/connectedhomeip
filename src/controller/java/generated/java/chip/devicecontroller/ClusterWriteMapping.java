@@ -637,6 +637,28 @@ public class ClusterWriteMapping {
       writeGeneralCommissioningBreadcrumbCommandParams
     );
     writeGeneralCommissioningInteractionInfo.put("writeBreadcrumbAttribute", writeGeneralCommissioningBreadcrumbAttributeInteractionInfo);
+    Map<String, CommandParameterInfo> writeGeneralCommissioningTCAcknowledgementsCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+    CommandParameterInfo generalCommissioningTCAcknowledgementsCommandParameterInfo =
+        new CommandParameterInfo(
+            "value", 
+            Integer.class, 
+            Integer.class 
+        );
+    writeGeneralCommissioningTCAcknowledgementsCommandParams.put(
+        "value",
+        generalCommissioningTCAcknowledgementsCommandParameterInfo
+    );
+    InteractionInfo writeGeneralCommissioningTCAcknowledgementsAttributeInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.GeneralCommissioningCluster) cluster).writeTCAcknowledgementsAttribute(
+          (DefaultClusterCallback) callback,
+          (Integer) commandArguments.get("value")
+        );
+      },
+      () -> new ClusterInfoMapping.DelegatedDefaultClusterCallback(),
+      writeGeneralCommissioningTCAcknowledgementsCommandParams
+    );
+    writeGeneralCommissioningInteractionInfo.put("writeTCAcknowledgementsAttribute", writeGeneralCommissioningTCAcknowledgementsAttributeInteractionInfo);
     writeAttributeMap.put("generalCommissioning", writeGeneralCommissioningInteractionInfo);
     Map<String, InteractionInfo> writeNetworkCommissioningInteractionInfo = new LinkedHashMap<>();
     Map<String, CommandParameterInfo> writeNetworkCommissioningInterfaceEnabledCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
