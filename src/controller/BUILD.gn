@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Project CHIP Authors
+# Copyright (c) 2020-2024 Project CHIP Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -113,10 +113,11 @@ static_library("controller") {
 
   public_deps = [
     "${chip_root}/src/app",
-    "${chip_root}/src/app/server",
+    "${chip_root}/src/app/server:server-core",
     "${chip_root}/src/lib/core",
     "${chip_root}/src/lib/dnssd",
     "${chip_root}/src/lib/support",
+    "${chip_root}/src/lib/support:testing",
     "${chip_root}/src/messaging",
     "${chip_root}/src/platform",
     "${chip_root}/src/protocols",

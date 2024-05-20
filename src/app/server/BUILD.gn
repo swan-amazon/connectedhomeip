@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Project CHIP Authors
+# Copyright (c) 2020-2024 Project CHIP Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,8 +24,40 @@ config("server_config") {
   }
 }
 
-static_library("server") {
-  output_name = "libCHIPAppServer"
+source_set("enhanced-setup-sources") {
+  sources = [
+    "EnhancedSetupFlowProvider.h",
+    "TermsAndConditionsProvider.h",
+  ]
+
+  public_deps = [ "${chip_root}/src/lib/core:error" ]
+}
+
+config("enhanced-setup-config") {
+}
+
+static_library("enhanced-setup") {
+  output_name = "libCHIPAppServerEnhancedSetup"
+
+  sources = [
+    "DefaultEnhancedSetupFlowProvider.cpp",
+    "DefaultEnhancedSetupFlowProvider.h",
+    "DefaultTermsAndConditionsProvider.cpp",
+    "DefaultTermsAndConditionsProvider.h",
+  ]
+
+  public_configs = [ ":enhanced-setup-config" ]
+
+  cflags = [ "-Wconversion" ]
+
+  public_deps = [
+    ":enhanced-setup-sources",
+    "${chip_root}/src/platform:platform",
+  ]
+}
+
+static_library("server-core") {
+  output_name = "libCHIPAppServerCore"
 
   sources = [
     "AclStorage.cpp",
@@ -42,7 +74,6 @@ static_library("server") {
     "EchoHandler.h",
     "OnboardingCodesUtil.cpp",
     "OnboardingCodesUtil.h",
-    "Server.cpp",
     "Server.h",
   ]
 
@@ -51,6 +82,7 @@ static_library("server") {
   cflags = [ "-Wconversion" ]
 
   public_deps = [
+    ":enhanced-setup-sources",
     "${chip_root}/src/app",
     "${chip_root}/src/app/icd/server:icd-server-config",
     "${chip_root}/src/app/icd/server:observer",
@@ -62,6 +94,22 @@ static_library("server") {
     "${chip_root}/src/protocols",
     "${chip_root}/src/setup_payload",
     "${chip_root}/src/transport",
+  ]
+}
+
+static_library("server") {
+  output_name = "libCHIPAppServer"
+
+  sources = [ "Server.cpp" ]
+
+  public_configs = [ ":server_config" ]
+
+  cflags = [ "-Wconversion" ]
+
+  public_deps = [
+    ":enhanced-setup",
+    ":enhanced-setup-sources",
+    ":server-core",
   ]
 
   # TODO: Server.cpp uses TestGroupData.h. Unsure why test code would be in such a central place

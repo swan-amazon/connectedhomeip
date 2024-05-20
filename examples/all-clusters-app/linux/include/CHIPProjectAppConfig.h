@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2022 Project CHIP Authors
+ *    Copyright (c) 2022-2024 Project CHIP Authors
  *    All rights reserved.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,3 +47,24 @@
 #define CHIP_CONFIG_MAX_PATHS_PER_INVOKE 5
 
 #define CHIP_CONFIG_ENABLE_BDX_LOG_TRANSFER 1
+
+/**
+ * @brief Configures the required terms and conditions acknowledgements.
+ *
+ * This macro defines the required terms and conditions acknowledgements bitmask. The bit-field is 16 bits long, so the possible
+ * value range is [0, 65535). This setting can be used to require that terms and conditions are presented to the user during
+ * commissioning.
+ */
+#define CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS 1 // Require that terms and conditions ordinal 1 must be accepted.
+
+/**
+ * @brief Configures the latest known version of the terms and conditions.
+ *
+ * This macro defines the version number of the latest terms and conditions. It allows the application to iterate on revisions of
+ * the terms and conditions. A value of 0 indicates that no specific version is required. This setting can be used to enforce
+ * version-specific terms and conditions acknowledgements in the application. When the set of terms and conditions needs to be
+ * changes, the version number should be monotomically increased. If the lateast terms and conditions version is updated (most
+ * likely during an OTA) then this may signal to the Administrator that updated terms and conditions should be presented to the
+ * user.
+ */
+#define CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION 1 // The current terms and conditions revision is 1.

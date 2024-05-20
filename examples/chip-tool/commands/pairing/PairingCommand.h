@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2020 Project CHIP Authors
+ *   Copyright (c) 2020-2024 Project CHIP Authors
  *   All rights reserved.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
@@ -182,6 +182,14 @@ public:
             AddArgument("dst-offset", &mComplex_DSTOffsets,
                         "DSTOffset list to use when setting Time Synchronization cluster's DSTOffset attribute",
                         Argument::kOptional);
+
+            AddArgument("tc-acknowledgements", 0, UINT16_MAX, &mTCAcknowledgements,
+                        "Terms and Conditions acknowledgements to use to set the General Commissioning cluster's TC "
+                        "Acknowledgements bit-field");
+
+            AddArgument("tc-acknowledgements-version", 0, UINT16_MAX, &mTCAcknowledgementVersion,
+                        "Terms and Conditions acknowledgement version to use to set the General Commissioning cluster's TC "
+                        "Acknowledgement version");
         }
 
         AddArgument("timeout", 0, UINT16_MAX, &mTimeout);
@@ -233,6 +241,8 @@ private:
     chip::Optional<bool> mBypassAttestationVerifier;
     chip::Optional<std::vector<uint32_t>> mCASEAuthTags;
     chip::Optional<char *> mCountryCode;
+    chip::Optional<uint16_t> mTCAcknowledgements;
+    chip::Optional<uint16_t> mTCAcknowledgementVersion;
     chip::Optional<bool> mSkipICDRegistration;
     chip::Optional<NodeId> mICDCheckInNodeId;
     chip::Optional<chip::ByteSpan> mICDSymmetricKey;
