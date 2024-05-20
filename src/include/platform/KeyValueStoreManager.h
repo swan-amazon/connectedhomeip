@@ -73,8 +73,8 @@ public:
      *         CHIP_ERROR_INVALID_ARGUMENT key is empty or too long or value is
      *                                     too large
      */
-    CHIP_ERROR Get(const char * key, void * buffer, size_t buffer_size, size_t * read_bytes_size = nullptr,
-                   size_t offset_bytes = 0);
+    virtual CHIP_ERROR Get(const char * key, void * buffer, size_t buffer_size, size_t * read_bytes_size = nullptr,
+                           size_t offset_bytes = 0);
 
     /**
      * @brief
@@ -124,7 +124,7 @@ public:
      *         CHIP_ERROR_INVALID_ARGUMENT key is empty or too long or value is
      *                                     too large
      */
-    CHIP_ERROR Put(const char * key, const void * value, size_t value_size);
+    virtual CHIP_ERROR Put(const char * key, const void * value, size_t value_size);
 
     /**
      * @brief
@@ -168,15 +168,15 @@ public:
      *         CHIP_ERROR_UNINITIALIZED the KVS is not initialized
      *         CHIP_ERROR_INVALID_ARGUMENT key is empty or too long
      */
-    CHIP_ERROR Delete(const char * key);
+    virtual CHIP_ERROR Delete(const char * key);
 
 private:
     using ImplClass = ::chip::DeviceLayer::PersistedStorage::KeyValueStoreManagerImpl;
 
 protected:
     // Construction/destruction limited to subclasses.
-    KeyValueStoreManager()  = default;
-    ~KeyValueStoreManager() = default;
+    KeyValueStoreManager()          = default;
+    virtual ~KeyValueStoreManager() = default;
 
     // No copy, move or assignment.
     KeyValueStoreManager(const KeyValueStoreManager &)             = delete;

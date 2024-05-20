@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright (c) 2021 Project CHIP Authors
+ *    Copyright (c) 2021-2024 Project CHIP Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include <app/CommandHandler.h>
 #include <app/ConcreteCommandPath.h>
 #include <app/server/CommissioningWindowManager.h>
+#include <app/server/EnhancedSetupFlowProvider.h>
 #include <app/server/Server.h>
 #include <app/util/af.h>
 #include <app/util/attribute-storage.h>
@@ -95,9 +96,32 @@ CHIP_ERROR GeneralCommissioningAttrAccess::Read(const ConcreteReadAttributePath 
     case SupportsConcurrentConnection::Id: {
         return ReadSupportsConcurrentConnection(aEncoder);
     }
-    default: {
-        break;
+    case TCAcceptedVersion::Id: {
+        uint16_t tcAcceptedVersion;
+        EnhancedSetupFlowProvider * const enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+        CHIP_ERROR err = enhancedSetupFlowProvider->GetTermsAndConditionsAcceptedAcknowledgementsVersion(tcAcceptedVersion);
+        return (CHIP_NO_ERROR != err) ? err : aEncoder.Encode(tcAcceptedVersion);
     }
+    case TCMinRequiredVersion::Id: {
+        uint16_t tcRequiredVersion;
+        EnhancedSetupFlowProvider * const enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+        CHIP_ERROR err = enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgementsVersion(tcRequiredVersion);
+        return (CHIP_NO_ERROR != err) ? err : aEncoder.Encode(tcRequiredVersion);
+    }
+    case TCAcknowledgements::Id: {
+        uint16_t tcAcknowledgements;
+        EnhancedSetupFlowProvider * const enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+        CHIP_ERROR err = enhancedSetupFlowProvider->GetTermsAndConditionsAcceptedAcknowledgements(tcAcknowledgements);
+        return (CHIP_NO_ERROR != err) ? err : aEncoder.Encode(tcAcknowledgements);
+    }
+    case TCAcknowledgementsRequired::Id: {
+        uint16_t tcAcknowledgementsRequired;
+        EnhancedSetupFlowProvider * const enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+        CHIP_ERROR err = enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgements(tcAcknowledgementsRequired);
+        return (CHIP_NO_ERROR != err) ? err : aEncoder.Encode(tcAcknowledgementsRequired);
+    }
+    default:
+        break;
     }
     return CHIP_NO_ERROR;
 }
@@ -214,9 +238,10 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
 {
     MATTER_TRACE_SCOPE("CommissioningComplete", "GeneralCommissioning");
 
-    DeviceControlServer * devCtrl = &DeviceLayer::DeviceControlServer::DeviceControlSvr();
-    auto & failSafe               = Server::GetInstance().GetFailSafeContext();
-    auto & fabricTable            = Server::GetInstance().GetFabricTable();
+    EnhancedSetupFlowProvider * const enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+    DeviceControlServer * devCtrl                               = &DeviceLayer::DeviceControlServer::DeviceControlSvr();
+    auto & failSafe                                             = Server::GetInstance().GetFailSafeContext();
+    auto & fabricTable                                          = Server::GetInstance().GetFabricTable();
 
     ChipLogProgress(FailSafe, "GeneralCommissioning: Received CommissioningComplete");
 
@@ -239,34 +264,43 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
         }
         else
         {
-            if (failSafe.NocCommandHasBeenInvoked())
+            CHIP_ERROR err;
+
+            if (!enhancedSetupFlowProvider->HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted())
             {
-                CHIP_ERROR err = fabricTable.CommitPendingFabricData();
-                if (err != CHIP_NO_ERROR)
-                {
-                    // No need to revert on error: CommitPendingFabricData always reverts if not fully successful.
-                    ChipLogError(FailSafe, "GeneralCommissioning: Failed to commit pending fabric data: %" CHIP_ERROR_FORMAT,
-                                 err.Format());
-                }
-                else
-                {
-                    ChipLogProgress(FailSafe, "GeneralCommissioning: Successfully commited pending fabric data");
-                }
-                CheckSuccess(err, Failure);
+                ChipLogError(AppServer, "Required terms and conditions have not been accepted");
+                Breadcrumb::Set(commandPath.mEndpointId, 0);
+                response.errorCode = CommissioningErrorEnum::kRequiredTCNotAccepted;
             }
 
-            /*
-             * Pass fabric of commissioner to DeviceControlSvr.
-             * This allows device to send messages back to commissioner.
-             * Once bindings are implemented, this may no longer be needed.
-             */
-            failSafe.DisarmFailSafe();
-            CheckSuccess(
-                devCtrl->PostCommissioningCompleteEvent(handle->AsSecureSession()->GetPeerNodeId(), handle->GetFabricIndex()),
-                Failure);
+            else if (!enhancedSetupFlowProvider->HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted())
+            {
+                ChipLogError(AppServer, "Minimum terms and conditions version has not been accepted");
+                Breadcrumb::Set(commandPath.mEndpointId, 0);
+                response.errorCode = CommissioningErrorEnum::kTCMinVersionNotMet;
+            }
 
-            Breadcrumb::Set(commandPath.mEndpointId, 0);
-            response.errorCode = CommissioningErrorEnum::kOk;
+            else
+            {
+                if (failSafe.NocCommandHasBeenInvoked())
+                {
+                    err = fabricTable.CommitPendingFabricData();
+                    CheckSuccess(err, Failure);
+                    ChipLogProgress(FailSafe, "GeneralCommissioning: Successfully commited pending fabric data");
+                }
+
+                /*
+                 * Pass fabric of commissioner to DeviceControlSvr.
+                 * This allows device to send messages back to commissioner.
+                 * Once bindings are implemented, this may no longer be needed.
+                 */
+                failSafe.DisarmFailSafe();
+                err = devCtrl->PostCommissioningCompleteEvent(handle->AsSecureSession()->GetPeerNodeId(), handle->GetFabricIndex());
+                CheckSuccess(err, Failure);
+
+                Breadcrumb::Set(commandPath.mEndpointId, 0);
+                response.errorCode = CommissioningErrorEnum::kOk;
+            }
         }
     }
 
@@ -328,13 +362,35 @@ bool emberAfGeneralCommissioningClusterSetRegulatoryConfigCallback(app::CommandH
     return true;
 }
 
+bool emberAfGeneralCommissioningClusterSetTCAcknowledgementsCallback(
+    chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
+    const chip::app::Clusters::GeneralCommissioning::Commands::SetTCAcknowledgements::DecodableType & commandData)
+{
+    MATTER_TRACE_SCOPE("SetTCAcknowledgements", "GeneralCommissioning");
+    Commands::SetTCAcknowledgementsResponse::Type response;
+    EnhancedSetupFlowProvider * const enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+    uint16_t acknowledgements                                   = commandData.TCUserResponse;
+    uint16_t acknowledgementsVersion                            = commandData.TCVersion;
+    CheckSuccess(enhancedSetupFlowProvider->SetTermsAndConditionsAcceptance(acknowledgements, acknowledgementsVersion), Failure);
+    response.errorCode = CommissioningErrorEnum::kOk;
+
+    commandObj->AddResponse(commandPath, response);
+    return true;
+}
+
 namespace {
 void OnPlatformEventHandler(const DeviceLayer::ChipDeviceEvent * event, intptr_t arg)
 {
-    if (event->Type == DeviceLayer::DeviceEventType::kFailSafeTimerExpired)
+    switch (event->Type)
     {
+    case DeviceLayer::DeviceEventType::kFailSafeTimerExpired: {
         // Spec says to reset Breadcrumb attribute to 0.
         Breadcrumb::Set(0, 0);
+        break;
+    }
+    default: {
+        break;
+    }
     }
 }
 

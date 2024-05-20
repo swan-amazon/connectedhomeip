@@ -5,6 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "/workspace/scripts/find_public_methods.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-C",
+                "out/unified/",
+                "-c",
+                "out/unified/compile_commands.json",
+                "../../src/platform/Linux/KeyValueStoreManagerImpl.cpp",
+                "KeyValueStoreManager"
+            ]
+        },
+
+        {
             "name": "LLDB Debugger: All Clusters App (chip-all-clusters-app)",
             "type": "lldb",
             "request": "launch",
@@ -64,6 +80,24 @@
                 "US"
             ],
             "cwd": "${workspaceFolder}/out/linux-x64-chip-tool",
+            "env": {},
+            "stdio": [null, null, null],
+            "terminal": "console",
+            "stopOnEntry": false
+        },
+        {
+            "name": "LLDB Debugger: Unit Test",
+            "type": "lldb", // [vadimcn/codelldb](https://github.com/vadimcn/codelldb)
+            "request": "launch",
+            "expressions": "native",
+            "sourceMap": {},
+            "relativePathBase": "${workspaceFolder}",
+            "breakpointMode": "path",
+            "sourceLanguages": ["cpp"],
+            "reverseDebugging": true,
+            "program": "/workspace/connectedhomeip/out/unified/linux_x64_clang/tests/TestCommissionManager",
+            "args": [],
+            "cwd": "/workspace/connectedhomeip/out/unified",
             "env": {},
             "stdio": [null, null, null],
             "terminal": "console",

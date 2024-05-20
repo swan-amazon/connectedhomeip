@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2022 Project CHIP Authors
+# Copyright (c) 2020-2024 Project CHIP Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,6 +69,8 @@ buildconfig_header("chip_buildconfig") {
     "CHIP_CONFIG_TLV_VALIDATE_CHAR_STRING_ON_WRITE=${chip_tlv_validate_char_string_on_write}",
     "CHIP_CONFIG_TLV_VALIDATE_CHAR_STRING_ON_READ=${chip_tlv_validate_char_string_on_read}",
     "CHIP_CONFIG_COMMAND_SENDER_BUILTIN_SUPPORT_FOR_BATCHED_COMMANDS=${chip_enable_sending_batch_commands}",
+    "CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS=${chip_tc_required_acknowledgements}",
+    "CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION=${chip_tc_required_acknowledgements_version}",
   ]
 
   visibility = [ ":chip_config_header" ]

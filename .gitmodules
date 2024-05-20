@@ -330,3 +330,7 @@
 	branch = matter_support
 	platforms = infineon
 
+[submodule "/workspace/connectedhomeip/third_party/googletest/repo"]
+	path = /workspace/connectedhomeip/third_party/googletest/repo
+	url = https://github.com/google/googletest.git
+	branch = v1.14.x

@@ -21,6 +21,8 @@
 
 #include <app/EventManagement.h>
 #include <app/InteractionModelEngine.h>
+#include <app/server/DefaultEnhancedSetupFlowProvider.h>
+#include <app/server/DefaultTermsAndConditionsProvider.h>
 #include <app/server/Dnssd.h>
 #include <app/server/EchoHandler.h>
 #include <app/util/DataModelHandler.h>
@@ -122,6 +124,8 @@ CHIP_ERROR Server::Init(const ServerInitParams & initParams)
     VerifyOrExit(initParams.operationalKeystore != nullptr, err = CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrExit(initParams.opCertStore != nullptr, err = CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrExit(initParams.reportScheduler != nullptr, err = CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrExit(initParams.enhancedSetupFlowProvider != nullptr, err = CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrExit(initParams.termsAndConditionsProvider != nullptr, err = CHIP_ERROR_INVALID_ARGUMENT);
 
     // TODO(16969): Remove chip::Platform::MemoryInit() call from Server class, it belongs to outer code
     chip::Platform::MemoryInit();
@@ -177,6 +181,9 @@ CHIP_ERROR Server::Init(const ServerInitParams & initParams)
     SetGroupDataProvider(mGroupsProvider);
 
     mReportScheduler = initParams.reportScheduler;
+
+    mTermsAndConditionsProvider = initParams.termsAndConditionsProvider;
+    mEnhancedSetupFlowProvider  = initParams.enhancedSetupFlowProvider;
 
     mTestEventTriggerDelegate = initParams.testEventTriggerDelegate;
 
@@ -711,5 +718,7 @@ app::SimpleSubscriptionResumptionStorage CommonCaseDeviceServerInitParams::sSubs
 #endif
 app::DefaultAclStorage CommonCaseDeviceServerInitParams::sAclStorage;
 Crypto::DefaultSessionKeystore CommonCaseDeviceServerInitParams::sSessionKeystore;
+app::DefaultEnhancedSetupFlowProvider CommonCaseDeviceServerInitParams::sDefaultEnhancedSetupFlowProvider;
+app::DefaultTermsAndConditionsProvider CommonCaseDeviceServerInitParams::sDefaultTermsAndConditionsProvider;
 
 } // namespace chip

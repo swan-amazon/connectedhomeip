@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *    Copyright (c) 2019-2020 Google LLC.
  *    Copyright (c) 2018 Nest Labs, Inc.
  *
@@ -1506,6 +1506,16 @@ static_assert(CHIP_DEVICE_CONFIG_BLE_EXT_ADVERTISING_INTERVAL_MIN <= CHIP_DEVICE
 #endif
 
 // -------------------- Miscellaneous --------------------
+
+// ----------------------- Terms and Conditions -----------------------
+
+#ifndef CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS
+#define CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS 0
+#endif
+
+#ifndef CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION
+#define CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION 0
+#endif
 
 /**
  * CHIP_DEVICE_CONFIG_ENABLE_AUTOMATIC_CASE_RETRIES

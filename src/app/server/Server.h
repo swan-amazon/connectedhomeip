@@ -33,6 +33,10 @@
 #include <app/server/AppDelegate.h>
 #include <app/server/CommissioningWindowManager.h>
 #include <app/server/DefaultAclStorage.h>
+#include <app/server/DefaultEnhancedSetupFlowProvider.h>
+#include <app/server/DefaultTermsAndConditionsProvider.h>
+#include <app/server/EnhancedSetupFlowProvider.h>
+#include <app/server/TermsAndConditionsProvider.h>
 #include <credentials/CertificateValidityPolicy.h>
 #include <credentials/FabricTable.h>
 #include <credentials/GroupDataProvider.h>
@@ -153,7 +157,9 @@ struct ServerInitParams
     // must not be null at timne of Server::Init().
     Credentials::OperationalCertificateStore * opCertStore = nullptr;
     // Required, if not provided, the Server::Init() WILL fail.
-    app::reporting::ReportScheduler * reportScheduler = nullptr;
+    app::reporting::ReportScheduler * reportScheduler            = nullptr;
+    app::EnhancedSetupFlowProvider * enhancedSetupFlowProvider   = nullptr;
+    app::TermsAndConditionsProvider * termsAndConditionsProvider = nullptr;
 };
 
 /**
@@ -202,11 +208,11 @@ struct CommonCaseDeviceServerInitParams : public ServerInitParams
      */
     CHIP_ERROR InitializeStaticResourcesBeforeServerInit()
     {
+        chip::DeviceLayer::PersistedStorage::KeyValueStoreManager & kvsManager = DeviceLayer::PersistedStorage::KeyValueStoreMgr();
+
         // KVS-based persistent storage delegate injection
         if (persistentStorageDelegate == nullptr)
         {
-            chip::DeviceLayer::PersistedStorage::KeyValueStoreManager & kvsManager =
-                DeviceLayer::PersistedStorage::KeyValueStoreMgr();
             ReturnErrorOnFailure(sKvsPersistenStorageDelegate.Init(&kvsManager));
             this->persistentStorageDelegate = &sKvsPersistenStorageDelegate;
         }
@@ -236,6 +242,18 @@ struct CommonCaseDeviceServerInitParams : public ServerInitParams
         if (this->reportScheduler == nullptr)
         {
             reportScheduler = &sReportScheduler;
+        }
+
+        if (this->termsAndConditionsProvider == nullptr)
+        {
+            ReturnErrorOnFailure(sDefaultTermsAndConditionsProvider.Init(&kvsManager));
+            this->termsAndConditionsProvider = &sDefaultTermsAndConditionsProvider;
+        }
+
+        if (this->enhancedSetupFlowProvider == nullptr)
+        {
+            ReturnErrorOnFailure(sDefaultEnhancedSetupFlowProvider.Init(this->termsAndConditionsProvider));
+            this->enhancedSetupFlowProvider = &sDefaultEnhancedSetupFlowProvider;
         }
 
         // Session Keystore injection
@@ -287,6 +305,8 @@ private:
 #endif
     static app::DefaultAclStorage sAclStorage;
     static Crypto::DefaultSessionKeystore sSessionKeystore;
+    static app::DefaultEnhancedSetupFlowProvider sDefaultEnhancedSetupFlowProvider;
+    static app::DefaultTermsAndConditionsProvider sDefaultTermsAndConditionsProvider;
 };
 
 /**
@@ -366,6 +386,8 @@ public:
     app::DefaultAttributePersistenceProvider & GetDefaultAttributePersister() { return mAttributePersister; }
 
     app::reporting::ReportScheduler * GetReportScheduler() { return mReportScheduler; }
+
+    app::EnhancedSetupFlowProvider * GetEnhancedSetupFlowProvider() { return mEnhancedSetupFlowProvider; }
 
 #if CHIP_CONFIG_ENABLE_ICD_SERVER
     app::ICDManager & GetICDManager() { return mICDManager; }
@@ -628,6 +650,8 @@ private:
     GroupDataProviderListener mListener;
     ServerFabricDelegate mFabricDelegate;
     app::reporting::ReportScheduler * mReportScheduler;
+    app::EnhancedSetupFlowProvider * mEnhancedSetupFlowProvider;
+    app::TermsAndConditionsProvider * mTermsAndConditionsProvider;
 
     Access::AccessControl mAccessControl;
     app::AclStorage * mAclStorage;

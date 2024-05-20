@@ -1,0 +1,118 @@
+# Copyright (c) 2024 Project CHIP Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build_overrides/build.gni")
+import("${build_root}/config/compiler/compiler.gni")
+
+config("googletest_config") {
+  include_dirs = [
+    "repo/googletest/include",
+    "repo/googletest",
+  ]
+}
+
+static_library("googletest") {
+  output_name = "libgoogletest"
+
+  include_dirs = [
+    "repo/googletest/include",
+    "repo/googletest",
+  ]
+
+  sources = [
+    "repo/googletest/include/gtest/gtest-assertion-result.h",
+    "repo/googletest/include/gtest/gtest-death-test.h",
+    "repo/googletest/include/gtest/gtest-matchers.h",
+    "repo/googletest/include/gtest/gtest-message.h",
+    "repo/googletest/include/gtest/gtest-param-test.h",
+    "repo/googletest/include/gtest/gtest-printers.h",
+    "repo/googletest/include/gtest/gtest-spi.h",
+    "repo/googletest/include/gtest/gtest-test-part.h",
+    "repo/googletest/include/gtest/gtest-typed-test.h",
+    "repo/googletest/include/gtest/gtest.h",
+    "repo/googletest/include/gtest/gtest_pred_impl.h",
+    "repo/googletest/include/gtest/gtest_prod.h",
+    "repo/googletest/include/gtest/internal/custom/gtest-port.h",
+    "repo/googletest/include/gtest/internal/custom/gtest-printers.h",
+    "repo/googletest/include/gtest/internal/custom/gtest.h",
+    "repo/googletest/include/gtest/internal/gtest-death-test-internal.h",
+    "repo/googletest/include/gtest/internal/gtest-filepath.h",
+    "repo/googletest/include/gtest/internal/gtest-internal.h",
+    "repo/googletest/include/gtest/internal/gtest-param-util.h",
+    "repo/googletest/include/gtest/internal/gtest-port-arch.h",
+    "repo/googletest/include/gtest/internal/gtest-port.h",
+    "repo/googletest/include/gtest/internal/gtest-string.h",
+    "repo/googletest/include/gtest/internal/gtest-type-util.h",
+    "repo/googletest/src/gtest-all.cc",
+    "repo/googletest/src/gtest-assertion-result.cc",
+    "repo/googletest/src/gtest-death-test.cc",
+    "repo/googletest/src/gtest-filepath.cc",
+    "repo/googletest/src/gtest-internal-inl.h",
+    "repo/googletest/src/gtest-matchers.cc",
+    "repo/googletest/src/gtest-port.cc",
+    "repo/googletest/src/gtest-printers.cc",
+    "repo/googletest/src/gtest-test-part.cc",
+    "repo/googletest/src/gtest-typed-test.cc",
+    "repo/googletest/src/gtest.cc",
+    "repo/googletest/src/gtest_main.cc",
+  ]
+
+  public_configs = [ ":googletest_config" ]
+}
+
+config("googlemock_config") {
+  include_dirs = [
+    "repo/googlemock/include",
+    "repo/googlemock",
+    "repo/googletest/include",
+  ]
+}
+
+static_library("googlemock") {
+  output_name = "libgooglemock"
+
+  include_dirs = [
+    "repo/googlemock/include",
+    "repo/googlemock",
+    "repo/googletest/include",
+  ]
+
+  sources = [
+    "repo/googlemock/include/gmock/gmock-actions.h",
+    "repo/googlemock/include/gmock/gmock-cardinalities.h",
+    "repo/googlemock/include/gmock/gmock-function-mocker.h",
+    "repo/googlemock/include/gmock/gmock-matchers.h",
+    "repo/googlemock/include/gmock/gmock-more-actions.h",
+    "repo/googlemock/include/gmock/gmock-more-matchers.h",
+    "repo/googlemock/include/gmock/gmock-nice-strict.h",
+    "repo/googlemock/include/gmock/gmock-spec-builders.h",
+    "repo/googlemock/include/gmock/gmock.h",
+    "repo/googlemock/include/gmock/internal/custom/gmock-generated-actions.h",
+    "repo/googlemock/include/gmock/internal/custom/gmock-matchers.h",
+    "repo/googlemock/include/gmock/internal/custom/gmock-port.h",
+    "repo/googlemock/include/gmock/internal/gmock-internal-utils.h",
+    "repo/googlemock/include/gmock/internal/gmock-port.h",
+    "repo/googlemock/include/gmock/internal/gmock-pp.h",
+    "repo/googlemock/src/gmock-all.cc",
+    "repo/googlemock/src/gmock-cardinalities.cc",
+    "repo/googlemock/src/gmock-internal-utils.cc",
+    "repo/googlemock/src/gmock-matchers.cc",
+    "repo/googlemock/src/gmock-spec-builders.cc",
+    "repo/googlemock/src/gmock.cc",
+    "repo/googlemock/src/gmock_main.cc",
+  ]
+
+  deps = [ ":googletest" ]
+  public_configs = [ ":googlemock_config" ]
+}
