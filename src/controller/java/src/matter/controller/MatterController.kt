@@ -59,6 +59,10 @@ interface MatterController : Closeable, InteractionClient {
     /** Notifies the Commissioner when the OpCSR for the Comissionee is generated. */
     fun onOpCSRGenerationComplete(csr: ByteArray)
 
+    fun onTermsAndConditionsRequired()
+
+    fun onTermsAndConditionsComplete()
+
     /**
      * Notifies when the ICD registration information (ICD symmetric key, check-in node ID and
      * monitored subject) is required.

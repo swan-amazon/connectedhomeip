@@ -1,0 +1,38 @@
+[
+    {
+        "request": {
+            "url": "https://on.dcl.csa-iot.org/dcl/model/models/65521/32769",
+            "method": "GET"
+        },
+        "response": {
+            "statusCode": 200,
+            "body": {
+                "vid": 65521,
+                "pid": 32769,
+                "deviceTypeId": 1,
+                "productName": "Harmony Home",
+                "productLabel": "Purifier",
+                "partNumber": "1",
+                "commissioningCustomFlow": 2,
+                "commissioningCustomFlowUrl": "https://example.com/matter/65521/32769/setup/1/index.html",
+                "commissioningModeInitialStepsHint": 0,
+                "commissioningModeInitialStepsInstruction": "",
+                "commissioningModeSecondaryStepsHint": 0,
+                "commissioningModeSecondaryStepsInstruction": "",
+                "userManualUrl": "https://example.com/matter/65521/32769/manual/1/index.html",
+                "supportUrl": "https://example.com/matter/65521/32769/support/1/index.html",
+                "productUrl": "https://example.com/matter/65521/32769/product/1/index.html",
+                "lsfUrl": "",
+                "lsfRevision": 0,
+                "creator": "cosmos1cj3f9jue3s389n2u6492nvyn86apey0x6hx03u",
+                "schemaVersion": 1,
+                "enhancedSetupFlowOptions": 1,
+                "enhancedSetupFlowTCUrl": "https://example.com/matter/65521/32769/tc/1/content.json",
+                "enhancedSetupFlowTCRevision": 1,
+                "enhancedSetupFlowTCDigest": "MTZlYjIwYWViYzU2ZWI0Nzc4Zjg0NTRiMmJjMjVlYWFlOTY5MjMzNGRiMzRhMjUxZjMwYmQ1Y2MzYzI1NGI2OA==",
+                "enhancedSetupFlowTCFileSize": 1024,
+                "maintenanceUrl": "https://example.com/matter/65521/32769/maintenance/1/index.html"
+            }
+        }
+    }
+]

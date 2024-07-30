@@ -69,7 +69,7 @@ class SelectActionFragment : Fragment() {
     binding.basicClusterBtn.setOnClickListener { handleBasicClicked() }
     binding.attestationTestBtn.setOnClickListener { handleAttestationTestClicked() }
     binding.clusterInteractionBtn.setOnClickListener { handleClusterInteractionClicked() }
-    binding.provisionCustomFlowBtn.setOnClickListener { handleProvisionCustomFlowClicked() }
+    binding.provisionCustomFlowReadFromLedgerBtn.setOnClickListener { handleProvisionCustomFlowClicked() }
     binding.wildcardBtn.setOnClickListener { handleWildcardClicked() }
     binding.unpairDeviceBtn.setOnClickListener { handleUnpairDeviceClicked() }
     binding.groupSettingBtn.setOnClickListener { handleGroupSettingClicked() }

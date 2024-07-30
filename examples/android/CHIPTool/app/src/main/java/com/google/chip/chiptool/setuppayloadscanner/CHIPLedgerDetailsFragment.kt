@@ -25,14 +25,19 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.android.volley.Request
+import com.android.volley.Response.Listener
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.google.chip.chiptool.R
 import com.google.chip.chiptool.databinding.ChipLedgerInfoFragmentBinding
 import com.google.chip.chiptool.util.FragmentUtil
 import com.google.gson.Gson
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import org.json.JSONObject
 
 /** Show the [CHIPDeviceInfo] from Ledger */
 class CHIPLedgerDetailsFragment : Fragment() {
@@ -55,7 +60,7 @@ class CHIPLedgerDetailsFragment : Fragment() {
 
     // Ledger api url
     val url =
-      Uri.parse(context!!.getString(R.string.dcl_api_root_url))
+      Uri.parse(DCL_API_ROOT_URL)
         .buildUpon()
         .appendPath("${deviceInfo.vendorId}")
         .appendPath("${deviceInfo.productId}")
@@ -63,53 +68,42 @@ class CHIPLedgerDetailsFragment : Fragment() {
         .toString()
     Log.d(TAG, "Dcl request Url: $url")
 
-    // Ledger API call
-    val jsonObjectRequest =
-      JsonObjectRequest(
-        Request.Method.GET,
-        url,
-        null,
-        { response ->
-          Log.d(TAG, "Response from dcl $response")
+    val context = getContext()!!
+    val mockDclRequestsResponsesRaw = readRawResourceFile(R.raw.mock_dcl_responses_json)
+    val mockDclRequestsResponses: org.json.JSONArray = org.json.JSONArray(mockDclRequestsResponsesRaw)
 
-          // parse redirect Url
-          val responseJson = response.getJSONObject(context!!.getString(R.string.dcl_response_key))
-          val redirectUrl =
-            responseJson.getString(context!!.getString(R.string.dcl_custom_flow_url_key))
-          Log.d(TAG, "Redirect Url from Ledger: $redirectUrl")
-          binding.commissioningFlowUrlTv.text = redirectUrl
+    val mockDclRequestsResponseMap = HashMap<String, org.json.JSONObject>()
+    for (i in 0 until mockDclRequestsResponses.length()) {
+      val mockDclRequestsResponse = mockDclRequestsResponses.getJSONObject(i)
 
-          // generate redirect payload
-          val gson = Gson()
-          val payloadJson = gson.toJson(deviceInfo)
-          val payloadBase64 = Base64.encodeToString(payloadJson.toByteArray(), Base64.DEFAULT)
-          val redirectUrlWithPayload =
-            Uri.parse(redirectUrl)
-              .buildUpon()
-              .appendQueryParameter("payload", payloadBase64)
-              .appendQueryParameter(
-                "returnUrl",
-                context!!.getString(R.string.custom_flow_return_url)
-              )
-              .build()
-              .toString()
+      val mockDclRequest: org.json.JSONObject = mockDclRequestsResponse.getJSONObject("request")
+      val mockDclResponse: org.json.JSONObject = mockDclRequestsResponse.getJSONObject("response")
 
-          Log.d(TAG, "Redirect Url with Payload: $redirectUrlWithPayload")
-          binding.redirectBtn.setOnClickListener {
-            FragmentUtil.getHost(this@CHIPLedgerDetailsFragment, Callback::class.java)
-              ?.handleCustomFlowRedirectClicked(redirectUrlWithPayload)
-          }
+      val mockDclRequestURL = mockDclRequest.getString("url")
+      val mockDclResponseBody = mockDclResponse.getJSONObject("body")
 
-          // enable redirect button
-          binding.redirectBtn.visibility = View.VISIBLE
-        },
-        { error ->
-          Log.e(TAG, "Dcl request failed: $error")
-          binding.commissioningFlowUrlTv.text =
-            context!!.getString(R.string.chip_ledger_info_commissioning_flow_url_not_available)
-        }
-      )
-    queue.add(jsonObjectRequest)
+      mockDclRequestsResponseMap.put(mockDclRequestURL, mockDclResponseBody)
+      Log.d(TAG, "mockDclRequestURL= $mockDclRequestURL")
+      Log.d(TAG, "mockDclResponseBody= $mockDclResponseBody")
+    }
+
+    Log.d(TAG, "Request url= $url")
+    val response: org.json.JSONObject = mockDclRequestsResponseMap.get(url.toString())!!
+    Log.d(TAG, "Response from dcl $response")
+    Toast.makeText(context, "Enhanced Setup Flow: $response", Toast.LENGTH_LONG).show()
+
+    val enhancedSetupFlowOptions = response.optInt("enhancedSetupFlowOptions", 0)
+
+    if (0 != (enhancedSetupFlowOptions and 0b00000001)) {
+      Toast.makeText(context, "Enhanced Setup Flow supported!", Toast.LENGTH_SHORT).show()
+
+      binding.commissionBtn.setOnClickListener {
+        FragmentUtil.getHost(this@CHIPLedgerDetailsFragment, Callback::class.java)
+          ?.handleEnhancedSetupFlowClicked()
+      }
+
+      binding.commissionBtn.visibility = View.VISIBLE
+    }
 
     return binding.root
   }
@@ -119,15 +113,40 @@ class CHIPLedgerDetailsFragment : Fragment() {
     _binding = null
   }
 
+  private fun readRawResourceFile(resourceId: Int): String? {
+      return try {
+          val inputStream = resources.openRawResource(resourceId)
+          val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+          val stringBuilder = StringBuilder()
+          var line: String? = bufferedReader.readLine()
+          while (line != null) {
+              stringBuilder.append(line)
+              line = bufferedReader.readLine()
+          }
+          bufferedReader.close()
+          inputStream.close()
+          stringBuilder.toString()
+      } catch (e: Exception) {
+          Log.e("MainActivity", "Error reading raw resource file", e)
+          null
+      }
+  }
+
   /** Interface for notifying the host. */
   interface Callback {
     /** Notifies listener of Custom flow redirect button click. */
     fun handleCustomFlowRedirectClicked(redirectUrl: String)
+
+    /** Notifies listener of Enhanced Setup flow button click. */
+    fun handleEnhancedSetupFlowClicked()
   }
 
   companion object {
     private const val TAG = "CUSTOM_FLOW"
     private const val ARG_DEVICE_INFO = "device_info"
+    private const val DCL_CUSTOM_FLOW_URL_KEY = "commissioningCustomFlowUrl";
+    private const val DCL_API_ROOT_URL = "https://on.dcl.csa-iot.org/dcl/model/models";
+    private const val CUSTOM_FLOW_RETURN_URL = "mt://modelinfo";
 
     @JvmStatic
     fun newInstance(deviceInfo: CHIPDeviceInfo): CHIPLedgerDetailsFragment {

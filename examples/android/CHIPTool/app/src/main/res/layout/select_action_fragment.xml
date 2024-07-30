@@ -32,7 +32,7 @@
             android:text="@string/provision_thread_credentials_btn_text" />
 
         <Button
-            android:id="@+id/provisionCustomFlowBtn"
+            android:id="@+id/provisionCustomFlowReadFromLedgerBtn"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_marginStart="8dp"

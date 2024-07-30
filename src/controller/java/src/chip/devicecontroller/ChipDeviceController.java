@@ -580,6 +580,13 @@ public class ChipDeviceController {
     updateCommissioningICDRegistrationInfo(deviceControllerPtr, icdRegistrationInfo);
   }
 
+  public void updateTermsAndConditionsAcknowledgements(
+      int acceptedTermsAndConditions, int acceptedTermsAndConditionsVersion)
+      throws java.lang.IllegalArgumentException {
+    updateTermsAndConditionsAcknowledgements(
+        deviceControllerPtr, acceptedTermsAndConditions, acceptedTermsAndConditionsVersion);
+  }
+
   public void unpairDevice(long deviceId) {
     unpairDevice(deviceControllerPtr, deviceId);
   }
@@ -1717,6 +1724,12 @@ public class ChipDeviceController {
   private native void updateCommissioningNetworkCredentials(
       long deviceControllerPtr, NetworkCredentials networkCredentials);
 
+  private native void updateTermsAndConditionsAcknowledgements(
+      long deviceControllerPtr,
+      int acceptedTermsAndConditions,
+      int acceptedTermsAndConditionsVersion)
+      throws java.lang.IllegalArgumentException;
+
   private native void updateCommissioningICDRegistrationInfo(
       long deviceControllerPtr, ICDRegistrationInfo icdRegistrationInfo);
 
@@ -1793,6 +1806,10 @@ public class ChipDeviceController {
         Optional<ArrayList<ThreadScanResult>> threadScanResults);
   }
 
+  public interface TermsAndConditionsListener {
+    void onTermsAndConditionsAcknowlegementRequired();
+  }
+
   /** Interface to listen for callbacks from CHIPDeviceController. */
   public interface CompletionListener {
 
@@ -1838,5 +1855,10 @@ public class ChipDeviceController {
 
     /** Notifies when the registration flow for the ICD completes. */
     void onICDRegistrationComplete(long errorCode, ICDDeviceInfo icdDeviceInfo);
+
+    void onTermsAndConditionsRequired();
+
+    void onTermsAndConditionsRequiredComplete(
+        int termsAndConditionsAcknowledgements, int termsAndConditionsVersion);
   }
 }

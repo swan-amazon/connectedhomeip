@@ -122,6 +122,11 @@ class CHIPToolActivity :
     startActivity(redirectIntent)
   }
 
+  override fun handleEnhancedSetupFlowClicked() {
+    Toast.makeText(this, "Enhanced Setup Flow", Toast.LENGTH_SHORT).show()
+    showFragment(DeviceProvisioningFragment.newInstance(deviceInfo!!, null))
+  }
+
   override fun setNetworkType(type: ProvisionNetworkType?) {
     networkType = type
   }

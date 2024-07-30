@@ -82,11 +82,20 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
             android:layout_below="@id/commissioningFlowUrlTv"
-            android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
             android:visibility="invisible"
             android:text="@string/chip_ledge_info_redirect_btn_text" />
+        <Button
+            android:id="@+id/commissionBtn"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
+            android:layout_below="@id/redirectBtn"
+            android:layout_alignParentEnd="true"
+            android:visibility="invisible"
+            android:text="@string/chip_ledge_info_commission_btn_text" />
     </RelativeLayout>
 </ScrollView>

@@ -60,4 +60,12 @@ open class GenericChipDeviceListener : ChipDeviceController.CompletionListener {
   override fun onICDRegistrationComplete(errorCode: Long, icdDeviceInfo: ICDDeviceInfo) {
     // No op
   }
+
+  override fun onTermsAndConditionsRequired() {
+    // No op
+  }
+
+  override fun onTermsAndConditionsRequiredComplete(termsAndConditionsAcknowledgements: Int, termsAndConditionsVersion: Int) {
+    // No op
+  }
 }

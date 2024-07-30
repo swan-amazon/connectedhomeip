@@ -733,6 +733,9 @@ JNI_METHOD(void, pairDeviceWithAddress)
     {
         commissioningParams.SetDeviceAttestationDelegate(wrapper->GetDeviceAttestationDelegateBridge());
     }
+
+    commissioningParams.SetTermsAndConditionsAcknowledgement((const TermsAndConditionsAcknowledgement){ 1, 1 });
+
     err = wrapper->Controller()->PairDevice(static_cast<chip::NodeId>(deviceId), rendezvousParams, commissioningParams);
 
     if (err != CHIP_NO_ERROR)
@@ -931,6 +934,39 @@ JNI_METHOD(void, updateCommissioningNetworkCredentials)
             JniReferences::GetInstance().ThrowError(env, sChipDeviceControllerExceptionCls, err);
         }
     }
+}
+
+JNI_METHOD(void, updateTermsAndConditionsAcknowledgements)
+(JNIEnv * env, jobject self, jlong handle, jint acceptedTermsAndConditions, jint acceptedTermsAndConditionsVersion)
+{
+    ChipLogProgress(Controller, "updateTermsAndConditionsAcknowledgements() called");
+
+    // Check if the input values are within the range of uint16_t
+    if (acceptedTermsAndConditions < 0 || acceptedTermsAndConditions > 65535 || acceptedTermsAndConditionsVersion < 0 ||
+        acceptedTermsAndConditionsVersion > 65535)
+    {
+        jclass illegalArgumentExceptionClass = env->FindClass("java/lang/IllegalArgumentException");
+        if (illegalArgumentExceptionClass != nullptr)
+        {
+            env->ThrowNew(illegalArgumentExceptionClass, "Input values must be in the range 0 to 65535.");
+        }
+        return;
+    }
+
+    AndroidDeviceControllerWrapper * wrapper = AndroidDeviceControllerWrapper::FromJNIHandle(handle);
+
+    // Retrieve the commissioning parameters
+    CommissioningParameters commissioningParams = wrapper->GetAutoCommissioner()->GetCommissioningParameters();
+
+    TermsAndConditionsAcknowledgement termsAndConditionsAcknowledgement;
+    termsAndConditionsAcknowledgement.acceptedTermsAndConditions        = static_cast<uint16_t>(acceptedTermsAndConditions);
+    termsAndConditionsAcknowledgement.acceptedTermsAndConditionsVersion = static_cast<uint16_t>(acceptedTermsAndConditionsVersion);
+
+    // Update the commissioning parameters with the new terms and conditions
+    commissioningParams.SetTermsAndConditionsAcknowledgement(termsAndConditionsAcknowledgement);
+
+    // Set the updated commissioning parameters back to the wrapper
+    wrapper->GetAutoCommissioner()->SetCommissioningParameters(commissioningParams);
 }
 
 JNI_METHOD(void, updateCommissioningICDRegistrationInfo)

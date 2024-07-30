@@ -80,8 +80,8 @@ class CHIPDeviceDetailsFragment : Fragment() {
 
     // commissioningFlow = 2 (Custom), read device info from Ledger
     if (deviceInfo.commissioningFlow == 2) {
-      binding.customFlowBtn.visibility = View.VISIBLE
-      binding.customFlowBtn.setOnClickListener {
+      binding.customFlowReadFromLedgerBtn.visibility = View.VISIBLE
+      binding.customFlowReadFromLedgerBtn.setOnClickListener {
         FragmentUtil.getHost(this@CHIPDeviceDetailsFragment, Callback::class.java)
           ?.handleReadFromLedgerClicked(deviceInfo)
       }

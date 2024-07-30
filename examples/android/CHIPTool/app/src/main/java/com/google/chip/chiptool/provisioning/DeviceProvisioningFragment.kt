@@ -314,6 +314,14 @@ class DeviceProvisioningFragment : Fragment() {
           .show()
       }
     }
+
+    override fun onTermsAndConditionsRequired() {
+    }
+
+    override fun onTermsAndConditionsRequiredComplete(termsAndConditionsAcknowledgements: Int, termsAndConditionsVersion: Int) {
+      Log.d(TAG, "onTermsAndConditionsRequiredComplete: $termsAndConditionsAcknowledgements, $termsAndConditionsVersion")
+      deviceController.updateTermsAndConditionsAcknowledgements(termsAndConditionsAcknowledgements, termsAndConditionsVersion)
+    }
   }
 
   private fun ByteArray.toHex(): String =
