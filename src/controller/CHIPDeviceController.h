@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020-2022 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *    Copyright (c) 2013-2017 Nest Labs, Inc.
  *    All rights reserved.
  *
@@ -696,6 +696,8 @@ public:
      */
     CHIP_ERROR ICDRegistrationInfoReady();
 
+    CHIP_ERROR TermsAndConditionsAcknowledgementsReady();
+
     /**
      * @brief
      *  This function returns the current CommissioningStage for this commissioner.
@@ -947,6 +949,9 @@ private:
     static void OnSetRegulatoryConfigResponse(
         void * context,
         const chip::app::Clusters::GeneralCommissioning::Commands::SetRegulatoryConfigResponse::DecodableType & data);
+    static void OnSetTCAcknowledgementsResponse(
+        void * context,
+        const chip::app::Clusters::GeneralCommissioning::Commands::SetTCAcknowledgementsResponse::DecodableType & data);
     static void OnSetUTCError(void * context, CHIP_ERROR error);
     static void
     OnSetTimeZoneResponse(void * context,
