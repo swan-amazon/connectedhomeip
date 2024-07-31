@@ -39,7 +39,7 @@ namespace Internal {
 class K32WConfig
 {
 public:
-    using Key = RamStorageKey;
+    using Key = struct RamStorageKey;
 
     /* Storage for factory data settings. Retained during factory reset. */
     static RamStorage sFactoryStorage;

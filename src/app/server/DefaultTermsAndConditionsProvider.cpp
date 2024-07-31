@@ -26,9 +26,9 @@
 #include <platform/KeyValueStoreManager.h>
 
 namespace {
-static constexpr chip::TLV::Tag kAcceptedAcknowledgementsTag        = chip::TLV::ContextTag(1);
-static constexpr chip::TLV::Tag kAcceptedAcknowledgementsVersionTag = chip::TLV::ContextTag(2);
-static constexpr size_t kEstimatedTlvBufferSize = chip::TLV::EstimateStructOverhead(sizeof(uint16_t), sizeof(uint16_t));
+constexpr chip::TLV::Tag kAcceptedAcknowledgementsTag        = chip::TLV::ContextTag(1);
+constexpr chip::TLV::Tag kAcceptedAcknowledgementsVersionTag = chip::TLV::ContextTag(2);
+constexpr size_t kEstimatedTlvBufferSize = chip::TLV::EstimateStructOverhead(sizeof(uint16_t), sizeof(uint16_t));
 }; // namespace
 
 CHIP_ERROR chip::app::DefaultTermsAndConditionsProvider::Init(chip::PersistentStorageDelegate * const inPersistentStorageDelegate,
