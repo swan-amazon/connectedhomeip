@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020-2022 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *    Copyright (c) 2013-2017 Nest Labs, Inc.
  *    All rights reserved.
  *
@@ -2691,6 +2691,22 @@ void DeviceCommissioner::OnSetRegulatoryConfigResponse(
     commissioner->CommissioningStageComplete(err, report);
 }
 
+void DeviceCommissioner::OnSetTCAcknowledgementsResponse(
+    void * context, const GeneralCommissioning::Commands::SetTCAcknowledgementsResponse::DecodableType & data)
+{
+    CommissioningDelegate::CommissioningReport report;
+    CHIP_ERROR err = CHIP_NO_ERROR;
+
+    ChipLogProgress(Controller, "Received SetTCAcknowledgements response errorCode=%u", to_underlying(data.errorCode));
+    if (data.errorCode != GeneralCommissioning::CommissioningErrorEnum::kOk)
+    {
+        err = CHIP_ERROR_INTERNAL;
+        report.Set<CommissioningErrorInfo>(data.errorCode);
+    }
+    DeviceCommissioner * commissioner = static_cast<DeviceCommissioner *>(context);
+    commissioner->CommissioningStageComplete(err, report);
+}
+
 void DeviceCommissioner::OnSetTimeZoneResponse(void * context,
                                                const TimeSynchronization::Commands::SetTimeZoneResponse::DecodableType & data)
 {
@@ -2759,6 +2775,16 @@ CHIP_ERROR DeviceCommissioner::NetworkCredentialsReady()
 CHIP_ERROR DeviceCommissioner::ICDRegistrationInfoReady()
 {
     ReturnErrorCodeIf(mCommissioningStage != CommissioningStage::kICDGetRegistrationInfo, CHIP_ERROR_INCORRECT_STATE);
+
+    // need to advance to next step
+    CommissioningStageComplete(CHIP_NO_ERROR);
+
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR DeviceCommissioner::TermsAndConditionsAcknowledgementsReady()
+{
+    ReturnErrorCodeIf(mCommissioningStage != CommissioningStage::kGetTCAcknowledgments, CHIP_ERROR_INCORRECT_STATE);
 
     // need to advance to next step
     CommissioningStageComplete(CHIP_NO_ERROR);
@@ -3163,6 +3189,56 @@ void DeviceCommissioner::PerformCommissioningStep(DeviceProxy * proxy, Commissio
         }
     }
     break;
+    case CommissioningStage::kGetTCAcknowledgments: {
+        ChipLogProgress(Controller, "Get Terms and Conditions Acknowledgments");
+
+        bool acknowledgementReady       = params.GetTermsAndConditionsAcknowledgement().HasValue();
+        bool acknowledgementNotRequired = params.GetRequireTermsAndConditionsAcknowledgement().HasValue() &&
+            !params.GetRequireTermsAndConditionsAcknowledgement().Value();
+
+        // If terms and conditions acknowledgements were provided, or not required, in the commissioning parameters, then skip ahead
+        if (acknowledgementReady || acknowledgementNotRequired)
+        {
+            TermsAndConditionsAcknowledgementsReady();
+            return;
+        }
+
+        ChipLogProgress(Controller, "Waiting for Terms and Conditions");
+        break;
+    }
+    case CommissioningStage::kConfigureTCAcknowledgments: {
+        ChipLogProgress(Controller, "Setting Terms and Conditions");
+
+        bool acknowledgementNotRequired = params.GetRequireTermsAndConditionsAcknowledgement().HasValue() &&
+            !params.GetRequireTermsAndConditionsAcknowledgement().Value();
+
+        if (acknowledgementNotRequired)
+        {
+            CommissioningStageComplete(CHIP_NO_ERROR);
+            return;
+        }
+
+        if (!params.GetTermsAndConditionsAcknowledgement().HasValue())
+        {
+            ChipLogError(Controller, "No acknowledgements provided");
+            CommissioningStageComplete(CHIP_ERROR_INVALID_ARGUMENT);
+            return;
+        }
+
+        GeneralCommissioning::Commands::SetTCAcknowledgements::Type request;
+        TermsAndConditionsAcknowledgement termsAndConditionsAcknowledgement = params.GetTermsAndConditionsAcknowledgement().Value();
+        request.TCUserResponse = termsAndConditionsAcknowledgement.acceptedTermsAndConditions;
+        request.TCVersion      = termsAndConditionsAcknowledgement.acceptedTermsAndConditionsVersion;
+        CHIP_ERROR err =
+            SendCommissioningCommand(proxy, request, OnSetTCAcknowledgementsResponse, OnBasicFailure, endpoint, timeout);
+        if (err != CHIP_NO_ERROR)
+        {
+            ChipLogError(Controller, "Failed to send SetTCAcknowledgements command: %" CHIP_ERROR_FORMAT, err.Format());
+            CommissioningStageComplete(err);
+            return;
+        }
+        break;
+    }
     case CommissioningStage::kSendPAICertificateRequest: {
         ChipLogProgress(Controller, "Sending request for PAI certificate");
         CHIP_ERROR err = SendCertificateChainRequestCommand(proxy, CertificateType::kPAI, timeout);

@@ -40,6 +40,8 @@ enum CommissioningStage : uint8_t
     kReadCommissioningInfo2,     ///< Query SupportsConcurrentConnection, ICD state, check for matching fabric
     kArmFailsafe,                ///< Send ArmFailSafe (0x30:0) command to the device
     kConfigRegulatory,           ///< Send SetRegulatoryConfig (0x30:2) command to the device
+    kGetTCAcknowledgments,       ///< Waiting for the higher layer to provide terms and conditions acknowledgements.
+    kConfigureTCAcknowledgments, ///< Send SetTCAcknowledgements (0x30:6) command to the device
     kConfigureUTCTime,           ///< SetUTCTime if the DUT has a time cluster
     kConfigureTimeZone,          ///< Configure a time zone if one is required and available
     kConfigureDSTOffset,         ///< Configure DST offset if one is required and available
