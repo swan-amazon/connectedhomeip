@@ -130,7 +130,7 @@ public:
 
             return aEncoder.Encode(supportsConcurrentConnection);
         }
-#if defined(CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS) && defined(CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION)
+#if CHIP_CONFIG_TC_REQUIRED
         case TCAcceptedVersion::Id: {
             auto provider = Server::GetInstance().GetEnhancedSetupFlowProvider();
             auto getter   = &EnhancedSetupFlowProvider::GetTermsAndConditionsAcceptedAcknowledgementsVersion;
@@ -229,7 +229,7 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
 {
     MATTER_TRACE_SCOPE("CommissioningComplete", "GeneralCommissioning");
 
-#if defined(CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS) && defined(CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION)
+#if CHIP_CONFIG_TC_REQUIRED
     EnhancedSetupFlowProvider * enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
 #endif
     DeviceControlServer * const devCtrl = &DeviceLayer::DeviceControlServer::DeviceControlSvr();
@@ -259,7 +259,7 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
         {
             CHIP_ERROR err;
 
-#if defined(CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS) && defined(CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION)
+#if CHIP_CONFIG_TC_REQUIRED
 
             uint16_t termsAndConditionsAcceptedAcknowledgements;
             bool hasRequiredTermAccepted;
@@ -379,7 +379,7 @@ bool emberAfGeneralCommissioningClusterSetTCAcknowledgementsCallback(
     chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
     const chip::app::Clusters::GeneralCommissioning::Commands::SetTCAcknowledgements::DecodableType & commandData)
 {
-#if defined(CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS) && defined(CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION)
+#if CHIP_CONFIG_TC_REQUIRED
     MATTER_TRACE_SCOPE("SetTCAcknowledgements", "GeneralCommissioning");
     Commands::SetTCAcknowledgementsResponse::Type response;
     EnhancedSetupFlowProvider * const enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
