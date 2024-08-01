@@ -40,6 +40,8 @@ enum CommissioningStage : uint8_t
     kReadCommissioningInfo2,     ///< Query SupportsConcurrentConnection, ICD state, check for matching fabric
     kArmFailsafe,                ///< Send ArmFailSafe (0x30:0) command to the device
     kConfigRegulatory,           ///< Send SetRegulatoryConfig (0x30:2) command to the device
+    kGetTCAcknowledgments,       ///< Waiting for the higher layer to provide terms and conditions acknowledgements.
+    kConfigureTCAcknowledgments, ///< Send SetTCAcknowledgements (0x30:6) command to the device
     kConfigureUTCTime,           ///< SetUTCTime if the DUT has a time cluster
     kConfigureTimeZone,          ///< Configure a time zone if one is required and available
     kConfigureDSTOffset,         ///< Configure DST offset if one is required and available
@@ -102,6 +104,12 @@ struct WiFiCredentials
     ByteSpan ssid;
     ByteSpan credentials;
     WiFiCredentials(ByteSpan newSsid, ByteSpan newCreds) : ssid(newSsid), credentials(newCreds) {}
+};
+
+struct TermsAndConditionsAcknowledgement
+{
+    uint16_t acceptedTermsAndConditions;
+    uint16_t acceptedTermsAndConditionsVersion;
 };
 
 struct NOCChainGenerationParameters
@@ -167,6 +175,14 @@ public:
 
     // The country code to be used for the node, if set.
     Optional<CharSpan> GetCountryCode() const { return mCountryCode; }
+
+
+    Optional<bool> GetRequireTermsAndConditionsAcknowledgement() const { return mRequireTermsAndConditionsAcknowledgement; }
+
+    Optional<TermsAndConditionsAcknowledgement> GetTermsAndConditionsAcknowledgement() const
+    {
+        return mTermsAndConditionsAcknowledgement;
+    }
 
     // Time zone to set for the node
     // If required, this will be truncated to fit the max size allowable on the node
@@ -337,6 +353,19 @@ public:
     CommissioningParameters & SetCountryCode(CharSpan countryCode)
     {
         mCountryCode.SetValue(countryCode);
+        return *this;
+    }
+
+    CommissioningParameters & SetRequireTermsAndConditionsAcknowledgement(bool requireTermsAndConditionsAcknowledgement)
+    {
+        mRequireTermsAndConditionsAcknowledgement.SetValue(requireTermsAndConditionsAcknowledgement);
+        return *this;
+    }
+
+    CommissioningParameters &
+    SetTermsAndConditionsAcknowledgement(TermsAndConditionsAcknowledgement termsAndConditionsAcknowledgement)
+    {
+        mTermsAndConditionsAcknowledgement.SetValue(termsAndConditionsAcknowledgement);
         return *this;
     }
 
@@ -581,6 +610,8 @@ public:
         mAttestationNonce.ClearValue();
         mWiFiCreds.ClearValue();
         mCountryCode.ClearValue();
+        mRequireTermsAndConditionsAcknowledgement.ClearValue();
+        mTermsAndConditionsAcknowledgement.ClearValue();
         mThreadOperationalDataset.ClearValue();
         mNOCChainGenerationParameters.ClearValue();
         mRootCert.ClearValue();
@@ -611,6 +642,8 @@ private:
     Optional<ByteSpan> mAttestationNonce;
     Optional<WiFiCredentials> mWiFiCreds;
     Optional<CharSpan> mCountryCode;
+    Optional<bool> mRequireTermsAndConditionsAcknowledgement;
+    Optional<TermsAndConditionsAcknowledgement> mTermsAndConditionsAcknowledgement;
     Optional<ByteSpan> mThreadOperationalDataset;
     Optional<NOCChainGenerationParameters> mNOCChainGenerationParameters;
     Optional<ByteSpan> mRootCert;
