@@ -4,6 +4,37 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
+        {
+            "name": "LLDB Debugger: pairing code (chip-tool)",
+            "type": "lldb", // [vadimcn/codelldb](https://github.com/vadimcn/codelldb)
+            "request": "launch",
+            "expressions": "native",
+            "sourceMap": {
+                "${workspaceFolder}/examples/chip-tool/": "${workspaceFolder}/examples/chip-tool/",
+                "${workspaceFolder}/examples/chip-tool/third_party/connectedhomeip/": "${workspaceFolder}/"
+            },
+            "relativePathBase": "${workspaceFolder}",
+            "breakpointMode": "path",
+            "sourceLanguages": ["cpp"],
+            "reverseDebugging": true,
+            "program": "/workspace/connectedhomeip/out/linux-chip-tool/chip-tool",
+            "args": [
+                "pairing",
+                "code",
+                "1",
+                "34970112332",
+                "--trace_decode",
+                "1",
+                "--country-code",
+                "US"
+            ],
+            "cwd": "/workspace/connectedhomeip/out/linux-chip-tool/",
+            "env": {},
+            "stdio": [null, null, null],
+            "terminal": "console",
+            "stopOnEntry": false
+        },
         {
             "name": "Attach to running process",
             "type": "lldb",
