@@ -23,6 +23,7 @@
 #include "app/server/DefaultTermsAndConditionsProvider.h"
 
 #include <lib/core/CHIPError.h>
+#include <lib/core/StringBuilderAdapters.h>
 #include <lib/support/TestPersistentStorageDelegate.h>
 #include <pw_unit_test/framework.h>
 
@@ -36,7 +37,7 @@ TEST(DefaultTermsAndConditionsProvider, TestInitSuccess)
     uint16_t requiredAcknowledgements        = 1;
     uint16_t requiredAcknowledgementsVersion = 1;
     err = tncProvider.Init(&storageDelegate, requiredAcknowledgements, requiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 }
 
 TEST(DefaultTermsAndConditionsProvider, TestNoRequirementsGetRequirementsSuccess)
@@ -49,14 +50,14 @@ TEST(DefaultTermsAndConditionsProvider, TestNoRequirementsGetRequirementsSuccess
     uint16_t requiredAcknowledgements        = 0;
     uint16_t requiredAcknowledgementsVersion = 0;
     err = tncProvider.Init(&storageDelegate, requiredAcknowledgements, requiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t outAcceptance;
     uint16_t outAcknowledgementsVersion;
     err = tncProvider.GetAcceptance(outAcceptance, outAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(0 == outAcceptance);
-    EXPECT_TRUE(0 == outAcknowledgementsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(0, outAcceptance);
+    EXPECT_EQ(0, outAcknowledgementsVersion);
 }
 
 TEST(DefaultTermsAndConditionsProvider, TestNeverAcceptanceGetAcceptanceSuccess)
@@ -69,14 +70,14 @@ TEST(DefaultTermsAndConditionsProvider, TestNeverAcceptanceGetAcceptanceSuccess)
     uint16_t requiredAcknowledgements        = 0b1111'1111'1111'1111;
     uint16_t requiredAcknowledgementsVersion = 1;
     err = tncProvider.Init(&storageDelegate, requiredAcknowledgements, requiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t outAcceptance;
     uint16_t outAcknowledgementsVersion;
     err = tncProvider.GetAcceptance(outAcceptance, outAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(0 == outAcceptance);
-    EXPECT_TRUE(0 == outAcknowledgementsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(0, outAcceptance);
+    EXPECT_EQ(0, outAcknowledgementsVersion);
 }
 
 TEST(DefaultTermsAndConditionsProvider, TestTermsAcceptedPersistsSuccess)
@@ -90,27 +91,27 @@ TEST(DefaultTermsAndConditionsProvider, TestTermsAcceptedPersistsSuccess)
     uint16_t requiredAcknowledgements        = 1;
     uint16_t requiredAcknowledgementsVersion = 1;
     err = tncProvider.Init(&storageDelegate, requiredAcknowledgements, requiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t acceptedTermsAndConditions        = 1;
     uint16_t acceptedTermsAndConditionsVersion = 1;
     err = tncProvider.SetAcceptance(acceptedTermsAndConditions, acceptedTermsAndConditionsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t outAcceptance;
     uint16_t outAcknowledgementsVersion;
     err = tncProvider.GetAcceptance(outAcceptance, outAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(1 == outAcceptance);
-    EXPECT_TRUE(1 == outAcknowledgementsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(1, outAcceptance);
+    EXPECT_EQ(1, outAcknowledgementsVersion);
 
     err = anotherTncProvider.Init(&storageDelegate, requiredAcknowledgements, requiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = anotherTncProvider.GetAcceptance(outAcceptance, outAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(1 == outAcceptance);
-    EXPECT_TRUE(1 == outAcknowledgementsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(1, outAcceptance);
+    EXPECT_EQ(1, outAcknowledgementsVersion);
 }
 
 TEST(DefaultTermsAndConditionsProvider, TestTermsRequiredGetRequirementsSuccess)
@@ -123,14 +124,14 @@ TEST(DefaultTermsAndConditionsProvider, TestTermsRequiredGetRequirementsSuccess)
     uint16_t initialRequiredAcknowledgements        = 1;
     uint16_t initialRequiredAcknowledgementsVersion = 1;
     err = tncProvider.Init(&storageDelegate, initialRequiredAcknowledgements, initialRequiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t outRequiredAcknowledgements;
     uint16_t outRequiredAcknowledgementsVersion;
     err = tncProvider.GetRequirements(outRequiredAcknowledgements, outRequiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(1 == outRequiredAcknowledgements);
-    EXPECT_TRUE(1 == outRequiredAcknowledgementsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(1, outRequiredAcknowledgements);
+    EXPECT_EQ(1, outRequiredAcknowledgementsVersion);
 }
 
 TEST(DefaultTermsAndConditionsProvider, TestSetAcceptanceGetAcceptanceSuccess)
@@ -143,19 +144,19 @@ TEST(DefaultTermsAndConditionsProvider, TestSetAcceptanceGetAcceptanceSuccess)
     uint16_t requiredAcknowledgements        = 1;
     uint16_t requiredAcknowledgementsVersion = 1;
     err = tncProvider.Init(&storageDelegate, requiredAcknowledgements, requiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t acceptedTermsAndConditions        = 1;
     uint16_t acceptedTermsAndConditionsVersion = 1;
     err = tncProvider.SetAcceptance(acceptedTermsAndConditions, acceptedTermsAndConditionsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t outAcceptance;
     uint16_t outAcknowledgementsVersion;
     err = tncProvider.GetAcceptance(outAcceptance, outAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(1 == outAcceptance);
-    EXPECT_TRUE(1 == outAcknowledgementsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(1, outAcceptance);
+    EXPECT_EQ(1, outAcknowledgementsVersion);
 }
 
 TEST(DefaultTermsAndConditionsProvider, TestClearAcceptanceGetAcceptanceSuccess)
@@ -168,29 +169,29 @@ TEST(DefaultTermsAndConditionsProvider, TestClearAcceptanceGetAcceptanceSuccess)
     uint16_t requiredAcknowledgements        = 1;
     uint16_t requiredAcknowledgementsVersion = 1;
     err = tncProvider.Init(&storageDelegate, requiredAcknowledgements, requiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t acceptedTermsAndConditions        = 1;
     uint16_t acceptedTermsAndConditionsVersion = 1;
     err = tncProvider.SetAcceptance(acceptedTermsAndConditions, acceptedTermsAndConditionsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t outAcceptance;
     uint16_t outAcknowledgementsVersion;
     err = tncProvider.GetAcceptance(outAcceptance, outAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(1 == outAcceptance);
-    EXPECT_TRUE(1 == outAcknowledgementsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(1, outAcceptance);
+    EXPECT_EQ(1, outAcknowledgementsVersion);
 
     err = tncProvider.ClearAcceptance();
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t outAcceptance2;
     uint16_t outAcknowledgementsVersion2;
     err = tncProvider.GetAcceptance(outAcceptance2, outAcknowledgementsVersion2);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(0 == outAcceptance2);
-    EXPECT_TRUE(0 == outAcknowledgementsVersion2);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(0, outAcceptance2);
+    EXPECT_EQ(0, outAcknowledgementsVersion2);
 }
 
 TEST(DefaultTermsAndConditionsProvider, TestAcceptanceRequiredTermsMissingFailure)
@@ -203,27 +204,27 @@ TEST(DefaultTermsAndConditionsProvider, TestAcceptanceRequiredTermsMissingFailur
     uint16_t requiredAcknowledgements        = 1;
     uint16_t requiredAcknowledgementsVersion = 1;
     err = tncProvider.Init(&storageDelegate, requiredAcknowledgements, requiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t acceptedTermsAndConditions        = 1;
     uint16_t acceptedTermsAndConditionsVersion = 1;
     err = tncProvider.SetAcceptance(acceptedTermsAndConditions, acceptedTermsAndConditionsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t outAcceptance;
     uint16_t outAcknowledgementsVersion;
     err = tncProvider.GetAcceptance(outAcceptance, outAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(1 == outAcceptance);
-    EXPECT_TRUE(1 == outAcknowledgementsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(1, outAcceptance);
+    EXPECT_EQ(1, outAcknowledgementsVersion);
 
     err = tncProvider.ClearAcceptance();
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     uint16_t outRequiredAcknowledgements;
     uint16_t outRequiredAcknowledgementsVersion;
     err = tncProvider.GetRequirements(outRequiredAcknowledgements, outRequiredAcknowledgementsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(1 == outRequiredAcknowledgements);
-    EXPECT_TRUE(1 == outRequiredAcknowledgementsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(1, outRequiredAcknowledgements);
+    EXPECT_EQ(1, outRequiredAcknowledgementsVersion);
 }

@@ -18,12 +18,11 @@
 
 #pragma once
 
-#include <system/SystemConfig.h>
-
 #include "EnhancedSetupFlowProvider.h"
 
 #include <stdint.h>
 
+#include <lib/core/CHIPConfig.h>
 #include <lib/core/CHIPError.h>
 
 #include "TermsAndConditionsProvider.h"
@@ -40,49 +39,25 @@ public:
      */
     CHIP_ERROR Init(TermsAndConditionsProvider * const inTermsAndConditionsProvider);
 
-    /**
-     * @copydoc EnhancedSetupFlowProvider::HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted
-     */
     CHIP_ERROR HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(bool & outAccepted) const override;
 
-    /**
-     * @copydoc EnhancedSetupFlowProvider::HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted
-     */
     CHIP_ERROR HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(bool & outAccepted) const override;
 
-    /**
-     * @copydoc EnhancedSetupFlowProvider::GetTermsAndConditionsRequiredAcknowledgements
-     */
     CHIP_ERROR GetTermsAndConditionsRequiredAcknowledgements(uint16_t & outValue) const override;
 
-    /**
-     * @copydoc EnhancedSetupFlowProvider::GetTermsAndConditionsRequiredAcknowledgementsVersion
-     */
     CHIP_ERROR GetTermsAndConditionsRequiredAcknowledgementsVersion(uint16_t & outValue) const override;
 
-    /**
-     * @copydoc EnhancedSetupFlowProvider::GetTermsAndConditionsAcceptedAcknowledgements
-     */
     CHIP_ERROR GetTermsAndConditionsAcceptedAcknowledgements(uint16_t & outValue) const override;
 
-    /**
-     * @copydoc EnhancedSetupFlowProvider::GetTermsAndConditionsAcceptedAcknowledgementsVersion
-     */
     CHIP_ERROR GetTermsAndConditionsAcceptedAcknowledgementsVersion(uint16_t & outValue) const override;
 
-    /**
-     * @copydoc EnhancedSetupFlowProvider::SetTermsAndConditionsAcceptance
-     */
     CHIP_ERROR SetTermsAndConditionsAcceptance(uint16_t aTCAcknowledgements, uint16_t inTCAcknowledgementsVersionValue) override;
 
-    /**
-     * @copydoc EnhancedSetupFlowProvider::ClearTermsAndConditionsAcceptance
-     */
     CHIP_ERROR ClearTermsAndConditionsAcceptance() override;
 
 private:
-    TermsAndConditionsProvider * mTermsAndConditionsProvider; /**< TermsAndConditionsProvider instance. */
+    TermsAndConditionsProvider * mTermsAndConditionsProvider;
 };
 
-}; // namespace app
-}; // namespace chip
+} // namespace app
+} // namespace chip

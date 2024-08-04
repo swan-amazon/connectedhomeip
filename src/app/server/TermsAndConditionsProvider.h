@@ -18,10 +18,9 @@
 
 #pragma once
 
-#include <system/SystemConfig.h>
-
 #include <stdint.h>
 
+#include <lib/core/CHIPConfig.h>
 #include <lib/core/CHIPError.h>
 
 namespace chip {
@@ -33,9 +32,6 @@ namespace app {
 class TermsAndConditionsProvider
 {
 public:
-    /**
-     * @brief Destructor.
-     */
     virtual ~TermsAndConditionsProvider() = default;
 
     /**
@@ -68,5 +64,5 @@ public:
     virtual CHIP_ERROR SetAcceptance(uint16_t inAcknowledgementsValue, uint16_t inAcknowledgementsVersionValue) = 0;
 };
 
-}; // namespace app
-}; // namespace chip
+} // namespace app
+} // namespace chip
