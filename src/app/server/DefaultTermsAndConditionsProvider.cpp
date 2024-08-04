@@ -30,8 +30,13 @@ constexpr chip::TLV::Tag kSerializationVersionTag            = chip::TLV::Contex
 constexpr chip::TLV::Tag kAcceptedAcknowledgementsTag        = chip::TLV::ContextTag(2);
 constexpr chip::TLV::Tag kAcceptedAcknowledgementsVersionTag = chip::TLV::ContextTag(3);
 constexpr uint8_t kSerializationVersion                      = 1;
-constexpr size_t kEstimatedTlvBufferSize = chip::TLV::EstimateStructOverhead(sizeof(uint8_t), sizeof(uint16_t), sizeof(uint16_t));
-}; // namespace
+
+constexpr size_t kEstimatedTlvBufferSize = chip::TLV::EstimateStructOverhead(sizeof(uint8_t),  // SerializationVersion
+                                                                             sizeof(uint16_t), // AcceptedAcknowledgements
+                                                                             sizeof(uint16_t)  // AcceptedAcknowledgementsVersion
+                                                                             ) *
+    2; // Extra space for rollback compatibility
+} // namespace
 
 CHIP_ERROR chip::app::DefaultTermsAndConditionsProvider::Init(chip::PersistentStorageDelegate * const inPersistentStorageDelegate,
                                                               uint16_t inRequiredAcknowledgementsValue,

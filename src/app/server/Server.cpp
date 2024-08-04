@@ -701,6 +701,7 @@ void Server::ScheduleFactoryReset()
         GetInstance().GetFabricTable().DeleteAllFabrics();
         PlatformMgr().HandleServerShuttingDown();
         ConfigurationMgr().InitiateFactoryReset();
+        // Clear accepted terms and conditions
     });
 }
 

@@ -174,6 +174,8 @@ public:
     // The country code to be used for the node, if set.
     Optional<CharSpan> GetCountryCode() const { return mCountryCode; }
 
+    Optional<bool> GetRequireTermsAndConditionsAcknowledgement() const { return mRequireTermsAndConditionsAcknowledgement; }
+
     Optional<TermsAndConditionsAcknowledgement> GetTermsAndConditionsAcknowledgement() const
     {
         return mTermsAndConditionsAcknowledgement;
@@ -348,6 +350,12 @@ public:
     CommissioningParameters & SetCountryCode(CharSpan countryCode)
     {
         mCountryCode.SetValue(countryCode);
+        return *this;
+    }
+
+    CommissioningParameters & SetRequireTermsAndConditionsAcknowledgement(bool requireTermsAndConditionsAcknowledgement)
+    {
+        mRequireTermsAndConditionsAcknowledgement.SetValue(requireTermsAndConditionsAcknowledgement);
         return *this;
     }
 
@@ -629,6 +637,7 @@ private:
     Optional<ByteSpan> mAttestationNonce;
     Optional<WiFiCredentials> mWiFiCreds;
     Optional<CharSpan> mCountryCode;
+    Optional<bool> mRequireTermsAndConditionsAcknowledgement;
     Optional<TermsAndConditionsAcknowledgement> mTermsAndConditionsAcknowledgement;
     Optional<ByteSpan> mThreadOperationalDataset;
     Optional<NOCChainGenerationParameters> mNOCChainGenerationParameters;

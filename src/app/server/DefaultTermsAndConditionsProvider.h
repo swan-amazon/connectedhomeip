@@ -18,12 +18,11 @@
 
 #pragma once
 
-#include <system/SystemConfig.h>
-
 #include "TermsAndConditionsProvider.h"
 
 #include <stdint.h>
 
+#include <lib/core/CHIPConfig.h>
 #include <lib/core/CHIPError.h>
 #include <lib/core/CHIPPersistentStorageDelegate.h>
 
@@ -42,24 +41,12 @@ public:
     CHIP_ERROR Init(PersistentStorageDelegate * const inPersistentStorageDelegate, uint16_t inRequiredAcknowledgementsValue,
                     uint16_t inRequiredAcknowledgementsVersionValue);
 
-    /**
-     * @copydoc TermsAndConditionsProvider::ClearAcceptance
-     */
     CHIP_ERROR ClearAcceptance() override;
 
-    /**
-     * @copydoc TermsAndConditionsProvider::GetAcceptance
-     */
     CHIP_ERROR GetAcceptance(uint16_t & outAcknowledgementsValue, uint16_t & outAcknowledgementsVersionValue) const override;
 
-    /**
-     * @copydoc TermsAndConditionsProvider::GetRequirements
-     */
     CHIP_ERROR GetRequirements(uint16_t & outAcknowledgementsValue, uint16_t & outAcknowledgementsVersionValue) const override;
 
-    /**
-     * @copydoc TermsAndConditionsProvider::SetAcceptance
-     */
     CHIP_ERROR SetAcceptance(uint16_t inAcknowledgementsValue, uint16_t inAcknowledgementsVersionValue) override;
 
 private:
@@ -68,5 +55,5 @@ private:
     uint16_t mRequiredAcknowledgementsVersionValue;
 };
 
-}; // namespace app
-}; // namespace chip
+} // namespace app
+} // namespace chip

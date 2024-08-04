@@ -88,10 +88,10 @@ static CHIP_ERROR ReadIfSupported(Provider * const provider, CHIP_ERROR (Provide
     return ReadIfSupported(provider, nonConstGetter, aEncoder);
 }
 
-class _ : public AttributeAccessInterface
+class GeneralCommissioningAttrAccess : public AttributeAccessInterface
 {
 public:
-    _() : AttributeAccessInterface(Optional<EndpointId>::Missing(), GeneralCommissioning::Id) {}
+    GeneralCommissioningAttrAccess() : AttributeAccessInterface(Optional<EndpointId>::Missing(), GeneralCommissioning::Id) {}
 
     CHIP_ERROR Read(const ConcreteReadAttributePath & aPath, AttributeValueEncoder & aEncoder)
     {
@@ -157,7 +157,9 @@ public:
         }
         return CHIP_NO_ERROR;
     }
-} gAttributeAccessInstance;
+};
+
+GeneralCommissioningAttrAccess gAttributeAccessInstance;
 
 } // anonymous namespace
 
@@ -279,7 +281,6 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
             if (!hasRequiredTermAccepted)
             {
                 ChipLogProgress(AppServer, "Required terms and conditions have not been accepted");
-                Breadcrumb::Set(commandPath.mEndpointId, 0);
                 response.errorCode = (0 == termsAndConditionsAcceptedAcknowledgements)
                     ? CommissioningErrorEnum::kTCAcknowledgementsNotReceived
                     : CommissioningErrorEnum::kRequiredTCNotAccepted;
@@ -288,7 +289,6 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
             else if (!hasRequiredTermVersionAccepted)
             {
                 ChipLogProgress(AppServer, "Minimum terms and conditions version has not been accepted");
-                Breadcrumb::Set(commandPath.mEndpointId, 0);
                 response.errorCode = CommissioningErrorEnum::kTCMinVersionNotMet;
             }
 
@@ -400,6 +400,9 @@ void OnPlatformEventHandler(const DeviceLayer::ChipDeviceEvent * event, intptr_t
     {
         // Spec says to reset Breadcrumb attribute to 0.
         Breadcrumb::Set(0, 0);
+
+        // Clear terms and conditions acceptance on failsafe timer expiration
+        Server::GetInstance().GetEnhancedSetupFlowProvider()->ClearTermsAndConditionsAcceptance();
     }
 }
 

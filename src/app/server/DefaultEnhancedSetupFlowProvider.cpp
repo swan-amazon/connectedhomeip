@@ -16,8 +16,6 @@
  *    limitations under the License.
  */
 
-#include <system/SystemConfig.h>
-
 #include "DefaultEnhancedSetupFlowProvider.h"
 
 #include <lib/core/CHIPConfig.h>

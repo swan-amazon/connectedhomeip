@@ -22,6 +22,7 @@
 #include "app/server/DefaultEnhancedSetupFlowProvider.h"
 
 #include <lib/core/CHIPError.h>
+#include <lib/core/StringBuilderAdapters.h>
 #include <pw_unit_test/framework.h>
 
 class FakeTermsAndConditionsProvider : public chip::app::TermsAndConditionsProvider
@@ -78,10 +79,10 @@ TEST(DefaultEnhancedSetupFlowProvider, TestNoAcceptanceRequiredCheckAcknowledgem
     chip::app::DefaultEnhancedSetupFlowProvider esfProvider;
 
     err = esfProvider.Init(&tncProvider);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasTermsBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
     EXPECT_TRUE(hasTermsBeenAccepted);
 }
 
@@ -94,10 +95,10 @@ TEST(DefaultEnhancedSetupFlowProvider, TestNoAcceptanceRequiredCheckAcknowledgem
     chip::app::DefaultEnhancedSetupFlowProvider esfProvider;
 
     err = esfProvider.Init(&tncProvider);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(hasTermsVersionBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
     EXPECT_TRUE(hasTermsVersionBeenAccepted);
 }
 
@@ -110,11 +111,11 @@ TEST(DefaultEnhancedSetupFlowProvider, TestAcceptanceRequiredNoTermsAcceptedChec
     chip::app::DefaultEnhancedSetupFlowProvider esfProvider;
 
     err = esfProvider.Init(&tncProvider);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasTermsBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(!hasTermsBeenAccepted);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_FALSE(hasTermsBeenAccepted);
 }
 
 TEST(DefaultEnhancedSetupFlowProvider,
@@ -128,18 +129,18 @@ TEST(DefaultEnhancedSetupFlowProvider,
     chip::app::DefaultEnhancedSetupFlowProvider esfProvider;
 
     err = esfProvider.Init(&tncProvider);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.SetTermsAndConditionsAcceptance(1, 0);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasTermsBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
     EXPECT_TRUE(hasTermsBeenAccepted);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(hasTermsVersionBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(!hasTermsVersionBeenAccepted);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_FALSE(hasTermsVersionBeenAccepted);
 }
 
 TEST(DefaultEnhancedSetupFlowProvider, TestAcceptanceRequiredTermsAcceptedFutureVersionCheckAcknowledgementsAcceptedSuccess)
@@ -157,14 +158,14 @@ TEST(DefaultEnhancedSetupFlowProvider, TestAcceptanceRequiredTermsAcceptedFuture
     chip::app::DefaultEnhancedSetupFlowProvider esfProvider;
 
     err = esfProvider.Init(&tncProvider);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasTermsBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
     EXPECT_TRUE(hasTermsBeenAccepted);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(hasTermsVersionBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
     EXPECT_TRUE(hasTermsVersionBeenAccepted);
 }
 
@@ -178,17 +179,17 @@ TEST(DefaultEnhancedSetupFlowProvider, TestAcceptanceRequiredTermsAcceptedSucces
     chip::app::DefaultEnhancedSetupFlowProvider esfProvider;
 
     err = esfProvider.Init(&tncProvider);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.SetTermsAndConditionsAcceptance(1, 1);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasTermsBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
     EXPECT_TRUE(hasTermsBeenAccepted);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(hasTermsVersionBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
     EXPECT_TRUE(hasTermsVersionBeenAccepted);
 }
 
@@ -207,14 +208,14 @@ TEST(DefaultEnhancedSetupFlowProvider, TestAcceptanceRequiredTermsMissingFailure
     chip::app::DefaultEnhancedSetupFlowProvider esfProvider;
 
     err = esfProvider.Init(&tncProvider);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasTermsBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(!hasTermsBeenAccepted);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_FALSE(hasTermsBeenAccepted);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(hasTermsVersionBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
     EXPECT_TRUE(hasTermsVersionBeenAccepted);
 }
 
@@ -233,14 +234,14 @@ TEST(DefaultEnhancedSetupFlowProvider, TestAcceptanceRequiredAllTermsAcceptedChe
     chip::app::DefaultEnhancedSetupFlowProvider esfProvider;
 
     err = esfProvider.Init(&tncProvider);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasTermsBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
     EXPECT_TRUE(hasTermsBeenAccepted);
 
     err = esfProvider.HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(hasTermsVersionBeenAccepted);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
     EXPECT_TRUE(hasTermsVersionBeenAccepted);
 }
 
@@ -267,43 +268,43 @@ TEST(DefaultEnhancedSetupFlowProvider, TestClearAcceptanceRetainsRequirements)
     chip::app::DefaultEnhancedSetupFlowProvider esfProvider;
 
     err = esfProvider.Init(&tncProvider);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.SetTermsAndConditionsAcceptance(updatedAcceptedTermsAndConditions, updatedAcceptedTermsAndConditionsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.GetTermsAndConditionsRequiredAcknowledgements(outRequiredTermsAndConditions);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(outRequiredTermsAndConditions == initialRequiredTermsAndConditions);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(outRequiredTermsAndConditions, initialRequiredTermsAndConditions);
 
     err = esfProvider.GetTermsAndConditionsRequiredAcknowledgementsVersion(outRequiredTermsAndConditionsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(outRequiredTermsAndConditionsVersion == initialRequiredTermsAndConditionsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(outRequiredTermsAndConditionsVersion, initialRequiredTermsAndConditionsVersion);
 
     err = esfProvider.GetTermsAndConditionsAcceptedAcknowledgements(outAcceptedTermsAndConditions);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(outAcceptedTermsAndConditions == updatedAcceptedTermsAndConditions);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(outAcceptedTermsAndConditions, updatedAcceptedTermsAndConditions);
 
     err = esfProvider.GetTermsAndConditionsAcceptedAcknowledgementsVersion(outAcceptedTermsAndConditionsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(outAcceptedTermsAndConditionsVersion == updatedAcceptedTermsAndConditionsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(outAcceptedTermsAndConditionsVersion, updatedAcceptedTermsAndConditionsVersion);
 
     err = esfProvider.ClearTermsAndConditionsAcceptance();
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
 
     err = esfProvider.GetTermsAndConditionsRequiredAcknowledgements(outRequiredTermsAndConditions);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(outRequiredTermsAndConditions == initialRequiredTermsAndConditions);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(outRequiredTermsAndConditions, initialRequiredTermsAndConditions);
 
     err = esfProvider.GetTermsAndConditionsRequiredAcknowledgementsVersion(outRequiredTermsAndConditionsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(outRequiredTermsAndConditionsVersion == initialRequiredTermsAndConditionsVersion);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(outRequiredTermsAndConditionsVersion, initialRequiredTermsAndConditionsVersion);
 
     err = esfProvider.GetTermsAndConditionsAcceptedAcknowledgements(outAcceptedTermsAndConditions);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(outAcceptedTermsAndConditions == 0);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(outAcceptedTermsAndConditions, 0);
 
     err = esfProvider.GetTermsAndConditionsAcceptedAcknowledgementsVersion(outAcceptedTermsAndConditionsVersion);
-    EXPECT_TRUE(CHIP_NO_ERROR == err);
-    EXPECT_TRUE(outAcceptedTermsAndConditionsVersion == 0);
+    EXPECT_EQ(CHIP_NO_ERROR, err);
+    EXPECT_EQ(outAcceptedTermsAndConditionsVersion, 0);
 }
