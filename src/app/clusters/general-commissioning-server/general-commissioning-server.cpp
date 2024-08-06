@@ -46,14 +46,26 @@ using namespace chip::DeviceLayer;
 using Transport::SecureSession;
 using Transport::Session;
 
-#define CheckSuccess(expr, code)                                                                                                   \
+// Function that calls the given callable if it is a function pointer and not nullptr
+template <typename T>
+void callIfFunction(T callable) {
+    if constexpr (std::is_pointer<T>::value && std::is_function<typename std::remove_pointer<T>::type>::value) {
+        if (nullptr != callable) {
+            callable();
+        }
+    }
+}
+
+#define CheckSuccess(expr, code, onSuccess, onFailure)                                                                             \
     do                                                                                                                             \
     {                                                                                                                              \
         if (!::chip::ChipError::IsSuccess(expr))                                                                                   \
         {                                                                                                                          \
             commandObj->AddStatus(commandPath, Protocols::InteractionModel::Status::code, #expr);                                  \
+            callIfFunction(onFailure);                                                                                             \
             return true;                                                                                                           \
         }                                                                                                                          \
+        callIfFunction(onSuccess);                                                                                                 \
     } while (false)
 
 namespace {
@@ -210,7 +222,7 @@ bool emberAfGeneralCommissioningClusterArmFailSafeCallback(app::CommandHandler *
         {
             CheckSuccess(
                 failSafeContext.ArmFailSafe(accessingFabricIndex, System::Clock::Seconds16(commandData.expiryLengthSeconds)),
-                Failure);
+                Failure, nullptr, nullptr);
             Breadcrumb::Set(commandPath.mEndpointId, commandData.breadcrumb);
             response.errorCode = CommissioningErrorEnum::kOk;
             commandObj->AddResponse(commandPath, response);
@@ -269,18 +281,21 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
 
             err = enhancedSetupFlowProvider->GetTermsAndConditionsAcceptedAcknowledgements(
                 termsAndConditionsAcceptedAcknowledgements);
-            CheckSuccess(err, Failure);
+            CheckSuccess(err, Failure, nullptr, [](){ ChipLogError(AppServer, "Failed to GetTermsAndConditionsAcceptedAcknowledgements"); });
 
             err = enhancedSetupFlowProvider->HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasRequiredTermAccepted);
-            CheckSuccess(err, Failure);
+            CheckSuccess(err, Failure, nullptr, [](){ ChipLogError(AppServer, "Failed to HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted"); });
 
             err = enhancedSetupFlowProvider->HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(
                 hasRequiredTermVersionAccepted);
-            CheckSuccess(err, Failure);
+            CheckSuccess(err, Failure, nullptr, [](){ ChipLogError(AppServer, "Failed to HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted"); });
 
             if (!hasRequiredTermAccepted)
             {
-                ChipLogProgress(AppServer, "Required terms and conditions have not been accepted");
+                uint16_t requiredAcknowledgements = 0;
+                (void) enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgements(requiredAcknowledgements);
+
+                ChipLogProgress(AppServer, "Required terms and conditions, 0x%04x,have not been accepted", requiredAcknowledgements);
                 response.errorCode = (0 == termsAndConditionsAcceptedAcknowledgements)
                     ? CommissioningErrorEnum::kTCAcknowledgementsNotReceived
                     : CommissioningErrorEnum::kRequiredTCNotAccepted;
@@ -288,7 +303,9 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
 
             else if (!hasRequiredTermVersionAccepted)
             {
-                ChipLogProgress(AppServer, "Minimum terms and conditions version has not been accepted");
+                uint16_t requiredAcknowledgementsVersion = 0;
+                (void) enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgementsVersion(requiredAcknowledgementsVersion);
+                ChipLogProgress(AppServer, "Minimum terms and conditions version, 0x%04x, has not been accepted", requiredAcknowledgementsVersion);
                 response.errorCode = CommissioningErrorEnum::kTCMinVersionNotMet;
             }
 
@@ -298,8 +315,9 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
                 if (failSafe.NocCommandHasBeenInvoked())
                 {
                     err = fabricTable.CommitPendingFabricData();
-                    CheckSuccess(err, Failure);
-                    ChipLogProgress(FailSafe, "GeneralCommissioning: Successfully commited pending fabric data");
+                    CheckSuccess(err, Failure,
+                        [](){ ChipLogProgress(FailSafe, "GeneralCommissioning: Successfully commited pending fabric data"); },
+                        [](){ ChipLogError(FailSafe, "GeneralCommissioning: Failed to commit pending fabric data"); });
                 }
 
                 /*
@@ -309,7 +327,7 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
                  */
                 failSafe.DisarmFailSafe();
                 err = devCtrl->PostCommissioningCompleteEvent(handle->AsSecureSession()->GetPeerNodeId(), handle->GetFabricIndex());
-                CheckSuccess(err, Failure);
+                CheckSuccess(err, Failure, nullptr, nullptr);
 
                 Breadcrumb::Set(commandPath.mEndpointId, 0);
                 response.errorCode = CommissioningErrorEnum::kOk;
@@ -351,7 +369,7 @@ bool emberAfGeneralCommissioningClusterSetRegulatoryConfigCallback(app::CommandH
         uint8_t locationCapability;
         uint8_t location = to_underlying(commandData.newRegulatoryConfig);
 
-        CheckSuccess(ConfigurationMgr().GetLocationCapability(locationCapability), Failure);
+        CheckSuccess(ConfigurationMgr().GetLocationCapability(locationCapability), Failure, nullptr, nullptr);
 
         // If the LocationCapability attribute is not Indoor/Outdoor and the NewRegulatoryConfig value received does not match
         // either the Indoor or Outdoor fixed value in LocationCapability.
@@ -364,7 +382,7 @@ bool emberAfGeneralCommissioningClusterSetRegulatoryConfigCallback(app::CommandH
         }
         else
         {
-            CheckSuccess(server->SetRegulatoryConfig(location, countryCode), Failure);
+            CheckSuccess(server->SetRegulatoryConfig(location, countryCode), Failure, nullptr, nullptr);
             Breadcrumb::Set(commandPath.mEndpointId, commandData.breadcrumb);
             response.errorCode = CommissioningErrorEnum::kOk;
         }
@@ -379,18 +397,22 @@ bool emberAfGeneralCommissioningClusterSetTCAcknowledgementsCallback(
     chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
     const chip::app::Clusters::GeneralCommissioning::Commands::SetTCAcknowledgements::DecodableType & commandData)
 {
-#if CHIP_CONFIG_TC_REQUIRED
+#if !CHIP_CONFIG_TC_REQUIRED
+    return false;
+
+#else
     MATTER_TRACE_SCOPE("SetTCAcknowledgements", "GeneralCommissioning");
     Commands::SetTCAcknowledgementsResponse::Type response;
     EnhancedSetupFlowProvider * const enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
     uint16_t acknowledgements                                   = commandData.TCUserResponse;
     uint16_t acknowledgementsVersion                            = commandData.TCVersion;
-    CheckSuccess(enhancedSetupFlowProvider->SetTermsAndConditionsAcceptance(acknowledgements, acknowledgementsVersion), Failure);
+    CheckSuccess(enhancedSetupFlowProvider->SetTermsAndConditionsAcceptance(acknowledgements, acknowledgementsVersion), Failure, nullptr, nullptr);
     response.errorCode = CommissioningErrorEnum::kOk;
 
     commandObj->AddResponse(commandPath, response);
-#endif
     return true;
+
+#endif
 }
 
 namespace {
@@ -401,8 +423,10 @@ void OnPlatformEventHandler(const DeviceLayer::ChipDeviceEvent * event, intptr_t
         // Spec says to reset Breadcrumb attribute to 0.
         Breadcrumb::Set(0, 0);
 
+#if CHIP_CONFIG_TC_REQUIRED
         // Clear terms and conditions acceptance on failsafe timer expiration
         Server::GetInstance().GetEnhancedSetupFlowProvider()->ClearTermsAndConditionsAcceptance();
+#endif
     }
 }
 
