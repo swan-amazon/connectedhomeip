@@ -27,7 +27,9 @@
 #include <app/CommandHandler.h>
 #include <app/ConcreteCommandPath.h>
 #include <app/server/CommissioningWindowManager.h>
+#if CHIP_CONFIG_TC_REQUIRED
 #include <app/server/EnhancedSetupFlowProvider.h>
+#endif
 #include <app/server/Server.h>
 #include <app/util/attribute-storage.h>
 #include <lib/support/Span.h>
@@ -48,9 +50,12 @@ using Transport::Session;
 
 // Function that calls the given callable if it is a function pointer and not nullptr
 template <typename T>
-void callIfFunction(T callable) {
-    if constexpr (std::is_pointer<T>::value && std::is_function<typename std::remove_pointer<T>::type>::value) {
-        if (nullptr != callable) {
+void CallIfFunction(T callable)
+{
+    if constexpr (std::is_pointer<T>::value && std::is_function<typename std::remove_pointer<T>::type>::value)
+    {
+        if (nullptr != callable)
+        {
             callable();
         }
     }
@@ -62,17 +67,17 @@ void callIfFunction(T callable) {
         if (!::chip::ChipError::IsSuccess(expr))                                                                                   \
         {                                                                                                                          \
             commandObj->AddStatus(commandPath, Protocols::InteractionModel::Status::code, #expr);                                  \
-            callIfFunction(onFailure);                                                                                             \
+            CallIfFunction(onFailure);                                                                                             \
             return true;                                                                                                           \
         }                                                                                                                          \
-        callIfFunction(onSuccess);                                                                                                 \
+        CallIfFunction(onSuccess);                                                                                                 \
     } while (false)
 
 namespace {
 
 template <typename Provider, typename T>
-static CHIP_ERROR ReadIfSupported(Provider * const provider, CHIP_ERROR (Provider::*const nonConstGetter)(T &),
-                                  AttributeValueEncoder & aEncoder)
+CHIP_ERROR ReadIfSupported(Provider * const provider, CHIP_ERROR (Provider::*const nonConstGetter)(T &),
+                           AttributeValueEncoder & aEncoder)
 {
     if (nullptr == provider)
     {
@@ -90,8 +95,8 @@ static CHIP_ERROR ReadIfSupported(Provider * const provider, CHIP_ERROR (Provide
 }
 
 template <typename Provider, typename T>
-static CHIP_ERROR ReadIfSupported(Provider * const provider, CHIP_ERROR (Provider::*const getter)(T &) const,
-                                  AttributeValueEncoder & aEncoder)
+CHIP_ERROR ReadIfSupported(Provider * const provider, CHIP_ERROR (Provider::*const getter)(T &) const,
+                           AttributeValueEncoder & aEncoder)
 {
     // Removing the const qualifier from the getter function pointer because there are a handful of getter functions that are not
     // correctly marked as const.
@@ -173,6 +178,65 @@ public:
 
 GeneralCommissioningAttrAccess gAttributeAccessInstance;
 
+#if CHIP_CONFIG_TC_REQUIRED
+CHIP_ERROR checkTermsAndConditionsAcknowledgementsState(CommissioningErrorEnum & errorCode)
+{
+    EnhancedSetupFlowProvider * enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+
+    CHIP_ERROR err;
+
+    uint16_t termsAndConditionsAcceptedAcknowledgements;
+    bool hasRequiredTermAccepted;
+    bool hasRequiredTermVersionAccepted;
+
+    err = enhancedSetupFlowProvider->GetTermsAndConditionsAcceptedAcknowledgements(termsAndConditionsAcceptedAcknowledgements);
+    if (!::chip::ChipError::IsSuccess(err))
+    {
+        ChipLogError(AppServer, "Failed to GetTermsAndConditionsAcceptedAcknowledgements");
+        return err;
+    }
+
+    err = enhancedSetupFlowProvider->HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasRequiredTermAccepted);
+    if (!::chip::ChipError::IsSuccess(err))
+    {
+        ChipLogError(AppServer, "Failed to HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted");
+        return err;
+    }
+
+    err =
+        enhancedSetupFlowProvider->HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(hasRequiredTermVersionAccepted);
+    if (!::chip::ChipError::IsSuccess(err))
+    {
+        ChipLogError(AppServer, "Failed to HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted");
+        return err;
+    }
+
+    if (!hasRequiredTermAccepted)
+    {
+        uint16_t requiredAcknowledgements = 0;
+        (void) enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgements(requiredAcknowledgements);
+
+        ChipLogProgress(AppServer, "Required terms and conditions, 0x%04x,have not been accepted", requiredAcknowledgements);
+        errorCode = (0 == termsAndConditionsAcceptedAcknowledgements) ? CommissioningErrorEnum::kTCAcknowledgementsNotReceived
+                                                                      : CommissioningErrorEnum::kRequiredTCNotAccepted;
+        return CHIP_NO_ERROR;
+    }
+
+    if (!hasRequiredTermVersionAccepted)
+    {
+        uint16_t requiredAcknowledgementsVersion = 0;
+        (void) enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgementsVersion(requiredAcknowledgementsVersion);
+        ChipLogProgress(AppServer, "Minimum terms and conditions version, 0x%04x, has not been accepted",
+                        requiredAcknowledgementsVersion);
+        errorCode = CommissioningErrorEnum::kTCMinVersionNotMet;
+        return CHIP_NO_ERROR;
+    }
+
+    errorCode = CommissioningErrorEnum::kOk;
+    return CHIP_NO_ERROR;
+}
+#endif
+
 } // anonymous namespace
 
 bool emberAfGeneralCommissioningClusterArmFailSafeCallback(app::CommandHandler * commandObj,
@@ -243,9 +307,6 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
 {
     MATTER_TRACE_SCOPE("CommissioningComplete", "GeneralCommissioning");
 
-#if CHIP_CONFIG_TC_REQUIRED
-    EnhancedSetupFlowProvider * enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
-#endif
     DeviceControlServer * const devCtrl = &DeviceLayer::DeviceControlServer::DeviceControlSvr();
     auto & failSafe                     = Server::GetInstance().GetFailSafeContext();
     auto & fabricTable                  = Server::GetInstance().GetFabricTable();
@@ -274,64 +335,29 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
             CHIP_ERROR err;
 
 #if CHIP_CONFIG_TC_REQUIRED
-
-            uint16_t termsAndConditionsAcceptedAcknowledgements;
-            bool hasRequiredTermAccepted;
-            bool hasRequiredTermVersionAccepted;
-
-            err = enhancedSetupFlowProvider->GetTermsAndConditionsAcceptedAcknowledgements(
-                termsAndConditionsAcceptedAcknowledgements);
-            CheckSuccess(err, Failure, nullptr, [](){ ChipLogError(AppServer, "Failed to GetTermsAndConditionsAcceptedAcknowledgements"); });
-
-            err = enhancedSetupFlowProvider->HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasRequiredTermAccepted);
-            CheckSuccess(err, Failure, nullptr, [](){ ChipLogError(AppServer, "Failed to HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted"); });
-
-            err = enhancedSetupFlowProvider->HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(
-                hasRequiredTermVersionAccepted);
-            CheckSuccess(err, Failure, nullptr, [](){ ChipLogError(AppServer, "Failed to HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted"); });
-
-            if (!hasRequiredTermAccepted)
-            {
-                uint16_t requiredAcknowledgements = 0;
-                (void) enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgements(requiredAcknowledgements);
-
-                ChipLogProgress(AppServer, "Required terms and conditions, 0x%04x,have not been accepted", requiredAcknowledgements);
-                response.errorCode = (0 == termsAndConditionsAcceptedAcknowledgements)
-                    ? CommissioningErrorEnum::kTCAcknowledgementsNotReceived
-                    : CommissioningErrorEnum::kRequiredTCNotAccepted;
-            }
-
-            else if (!hasRequiredTermVersionAccepted)
-            {
-                uint16_t requiredAcknowledgementsVersion = 0;
-                (void) enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgementsVersion(requiredAcknowledgementsVersion);
-                ChipLogProgress(AppServer, "Minimum terms and conditions version, 0x%04x, has not been accepted", requiredAcknowledgementsVersion);
-                response.errorCode = CommissioningErrorEnum::kTCMinVersionNotMet;
-            }
-
-            else
+            CheckSuccess(checkTermsAndConditionsAcknowledgementsState(response.errorCode), Failure, nullptr, nullptr);
 #endif
+
+            if (failSafe.NocCommandHasBeenInvoked())
             {
-                if (failSafe.NocCommandHasBeenInvoked())
-                {
-                    err = fabricTable.CommitPendingFabricData();
-                    CheckSuccess(err, Failure,
-                        [](){ ChipLogProgress(FailSafe, "GeneralCommissioning: Successfully commited pending fabric data"); },
-                        [](){ ChipLogError(FailSafe, "GeneralCommissioning: Failed to commit pending fabric data"); });
-                }
-
-                /*
-                 * Pass fabric of commissioner to DeviceControlSvr.
-                 * This allows device to send messages back to commissioner.
-                 * Once bindings are implemented, this may no longer be needed.
-                 */
-                failSafe.DisarmFailSafe();
-                err = devCtrl->PostCommissioningCompleteEvent(handle->AsSecureSession()->GetPeerNodeId(), handle->GetFabricIndex());
-                CheckSuccess(err, Failure, nullptr, nullptr);
-
-                Breadcrumb::Set(commandPath.mEndpointId, 0);
-                response.errorCode = CommissioningErrorEnum::kOk;
+                err = fabricTable.CommitPendingFabricData();
+                CheckSuccess(
+                    err, Failure,
+                    []() { ChipLogProgress(FailSafe, "GeneralCommissioning: Successfully commited pending fabric data"); },
+                    []() { ChipLogError(FailSafe, "GeneralCommissioning: Failed to commit pending fabric data"); });
             }
+
+            /*
+             * Pass fabric of commissioner to DeviceControlSvr.
+             * This allows device to send messages back to commissioner.
+             * Once bindings are implemented, this may no longer be needed.
+             */
+            failSafe.DisarmFailSafe();
+            err = devCtrl->PostCommissioningCompleteEvent(handle->AsSecureSession()->GetPeerNodeId(), handle->GetFabricIndex());
+            CheckSuccess(err, Failure, nullptr, nullptr);
+
+            Breadcrumb::Set(commandPath.mEndpointId, 0);
+            response.errorCode = CommissioningErrorEnum::kOk;
         }
     }
 
@@ -406,9 +432,9 @@ bool emberAfGeneralCommissioningClusterSetTCAcknowledgementsCallback(
     EnhancedSetupFlowProvider * const enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
     uint16_t acknowledgements                                   = commandData.TCUserResponse;
     uint16_t acknowledgementsVersion                            = commandData.TCVersion;
-    CheckSuccess(enhancedSetupFlowProvider->SetTermsAndConditionsAcceptance(acknowledgements, acknowledgementsVersion), Failure, nullptr, nullptr);
-    response.errorCode = CommissioningErrorEnum::kOk;
-
+    CheckSuccess(enhancedSetupFlowProvider->SetTermsAndConditionsAcceptance(acknowledgements, acknowledgementsVersion), Failure,
+                 nullptr, nullptr);
+    CheckSuccess(checkTermsAndConditionsAcknowledgementsState(response.errorCode), Failure, nullptr, nullptr);
     commandObj->AddResponse(commandPath, response);
     return true;
 

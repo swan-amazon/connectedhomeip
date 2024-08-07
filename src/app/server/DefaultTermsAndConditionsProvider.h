@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 
-#include <lib/core/CHIPConfig.h>
 #include <lib/core/CHIPError.h>
 #include <lib/core/CHIPPersistentStorageDelegate.h>
 

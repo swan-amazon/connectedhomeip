@@ -16,10 +16,6 @@
  *    limitations under the License.
  */
 
-#define CHIP_CONFIG_TC_REQUIRED 1                          // Enable conditional feature for testing
-#define CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS 0         // Dummy define to satisfy #error check
-#define CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION 0 // Dummy define to satisfy #error check
-
 #include "app/server/DefaultTermsAndConditionsProvider.h"
 
 #include <lib/core/CHIPError.h>

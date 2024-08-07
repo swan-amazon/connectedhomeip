@@ -24,6 +24,41 @@ config("server_config") {
   }
 }
 
+config("enhanced_setup_flow_config") {
+  defines = []
+  if (chip_config_tc_required) {
+    defines += [
+      "CHIP_CONFIG_TC_REQUIRED=1",
+      "CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS=${chip_config_tc_required_acknowledgements}",
+      "CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION=${chip_config_tc_required_acknowledgements_version}",
+    ]
+  } else {
+    defines += [ "CHIP_CONFIG_TC_REQUIRED=0" ]
+  }
+}
+
+source_set("enhanced_setup_flow_interface") {
+  sources = [
+    "DefaultEnhancedSetupFlowProvider.h",
+    "DefaultTermsAndConditionsProvider.h",
+    "EnhancedSetupFlowProvider.h",
+    "TermsAndConditionsProvider.h",
+  ]
+
+  public_configs = [ ":enhanced_setup_flow_config" ]
+
+  public_deps = [ "${chip_root}/src/lib/core" ]
+}
+
+source_set("enhanced_setup_flow") {
+  sources = [
+    "DefaultEnhancedSetupFlowProvider.cpp",
+    "DefaultTermsAndConditionsProvider.cpp",
+  ]
+
+  deps = [ ":enhanced_setup_flow_interface" ]
+}
+
 static_library("server") {
   output_name = "libCHIPAppServer"
 
@@ -36,20 +71,14 @@ static_library("server") {
     "CommissioningWindowManager.h",
     "DefaultAclStorage.cpp",
     "DefaultAclStorage.h",
-    "DefaultEnhancedSetupFlowProvider.cpp",
-    "DefaultEnhancedSetupFlowProvider.h",
-    "DefaultTermsAndConditionsProvider.cpp",
-    "DefaultTermsAndConditionsProvider.h",
     "Dnssd.cpp",
     "Dnssd.h",
     "EchoHandler.cpp",
     "EchoHandler.h",
-    "EnhancedSetupFlowProvider.h",
     "OnboardingCodesUtil.cpp",
     "OnboardingCodesUtil.h",
     "Server.cpp",
     "Server.h",
-    "TermsAndConditionsProvider.h",
   ]
 
   public_configs = [ ":server_config" ]
@@ -57,6 +86,7 @@ static_library("server") {
   cflags = [ "-Wconversion" ]
 
   public_deps = [
+    ":enhanced_setup_flow_interface",
     "${chip_root}/src/app",
     "${chip_root}/src/app:test-event-trigger",
     "${chip_root}/src/app/icd/server:check-in-back-off",
@@ -84,5 +114,9 @@ static_library("server") {
       public_deps +=
           [ "${chip_root}/src/app/icd/server:default-check-in-back-off" ]
     }
+  }
+
+  if (chip_config_tc_required) {
+    public_deps += [ ":enhanced_setup_flow" ]
   }
 }
