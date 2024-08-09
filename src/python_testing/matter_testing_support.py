@@ -546,6 +546,10 @@ class MatterTestConfig:
 
     trace_to: List[str] = field(default_factory=list)
 
+    # Accepted Terms and Conditions if used
+    tc_version: int = None
+    tc_user_response: int = None
+
 
 class ClusterMapper:
     """Describe clusters/attributes using schema names."""
@@ -1591,6 +1595,9 @@ def convert_args_to_matter_config(args: argparse.Namespace) -> MatterTestConfig:
     config.controller_node_id = args.controller_node_id
     config.trace_to = args.trace_to
 
+    config.tc_version = args.tc_version
+    config.tc_user_response = args.tc_user_response
+
     # Accumulate all command-line-passed named args
     all_global_args = []
     argsets = [item for item in (args.int_arg, args.float_arg, args.string_arg, args.json_arg,
@@ -1683,6 +1690,10 @@ def parse_matter_test_args(argv: Optional[List[str]] = None) -> MatterTestConfig
 
     commission_group.add_argument('--commission-only', action="store_true", default=False,
                                   help="If true, test exits after commissioning without running subsequent tests")
+
+    commission_group.add_argument('--tc-version', type=int, help="Terms and conditions version")
+
+    commission_group.add_argument('--tc-user-response', type=int, help="Terms and conditions acknowledgements")
 
     code_group = parser.add_mutually_exclusive_group(required=False)
 
@@ -1953,6 +1964,13 @@ class CommissionDeviceTest(MatterBaseTest):
         conf = self.matter_test_config
 
         info = self.get_setup_payload_info()[i]
+
+        if conf.tc_version is not None and conf.tc_user_response is not None:
+            logging.debug(f"Setting TC Acknowledgements to version {conf.tc_version} with user response {conf.tc_user_response}.")
+            dev_ctrl.SetTCAcknowledgements(conf.tc_version, conf.tc_user_response)
+            dev_ctrl.SetTCRequired(True)
+        else:
+            dev_ctrl.SetTCRequired(False)
 
         if conf.commissioning_method == "on-network":
             try:
