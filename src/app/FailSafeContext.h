@@ -56,7 +56,9 @@ public:
     void SetUpdateNocCommandInvoked() { mUpdateNocCommandHasBeenInvoked = true; }
     void SetAddTrustedRootCertInvoked() { mAddTrustedRootCertHasBeenInvoked = true; }
     void SetCsrRequestForUpdateNoc(bool isForUpdateNoc) { mIsCsrRequestForUpdateNoc = isForUpdateNoc; }
-
+#if CHIP_CONFIG_TC_REQUIRED
+    void SetUpdateTermsAndConditionsHasBeenInvoked() { mUpdateTermsAndConditionsHasBeenInvoked = true; }
+#endif
     /**
      * @brief
      *   Schedules a work to cleanup the FailSafe Context asynchronously after various cleanup work
@@ -91,6 +93,9 @@ public:
     bool UpdateNocCommandHasBeenInvoked() const { return mUpdateNocCommandHasBeenInvoked; }
     bool AddTrustedRootCertHasBeenInvoked() const { return mAddTrustedRootCertHasBeenInvoked; }
     bool IsCsrRequestForUpdateNoc() const { return mIsCsrRequestForUpdateNoc; }
+#if CHIP_CONFIG_TC_REQUIRED
+    bool UpdateTermsAndConditionsHasBeenInvoked() { return mUpdateTermsAndConditionsHasBeenInvoked; }
+#endif
 
     FabricIndex GetFabricIndex() const
     {
@@ -110,7 +115,10 @@ private:
     bool mAddTrustedRootCertHasBeenInvoked = false;
     // The fact of whether a CSR occurred at all is stored elsewhere.
     bool mIsCsrRequestForUpdateNoc = false;
-    FabricIndex mFabricIndex       = kUndefinedFabricIndex;
+#if CHIP_CONFIG_TC_REQUIRED
+    bool mUpdateTermsAndConditionsHasBeenInvoked = false;
+#endif
+    FabricIndex mFabricIndex = kUndefinedFabricIndex;
 
     /**
      * @brief
@@ -145,6 +153,9 @@ private:
         mAddTrustedRootCertHasBeenInvoked = false;
         mFailSafeBusy                     = false;
         mIsCsrRequestForUpdateNoc         = false;
+#if CHIP_CONFIG_TC_REQUIRED
+        mUpdateTermsAndConditionsHasBeenInvoked = false;
+#endif
     }
 
     void FailSafeTimerExpired();
