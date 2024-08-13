@@ -82,6 +82,8 @@ enum CommissioningStage : uint8_t
     kPrimaryOperationalNetworkFailed, ///< Indicate that the primary operational network (on root endpoint) failed, should disable
                                       ///< the primary network interface later.
     kDisablePrimaryNetworkInterface,  ///< Send InterfaceEnabled write request to the device to disable network interface.
+    kGetTCAcknowledgments,            ///< Waiting for the higher layer to provide terms and conditions acknowledgements.
+    kConfigureTCAcknowledgments,      ///< Send SetTCAcknowledgements (0x30:6) command to the device
 };
 
 enum class ICDRegistrationStrategy : uint8_t
