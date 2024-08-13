@@ -60,6 +60,19 @@ declare_args() {
       current_os != "android"
 }
 
+config("enhanced_setup_flow_config") {
+  defines = []
+  if (chip_config_tc_required) {
+    defines += [
+      "CHIP_CONFIG_TC_REQUIRED=1",
+      "CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS=${chip_config_tc_required_acknowledgements}",
+      "CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION=${chip_config_tc_required_acknowledgements_version}",
+    ]
+  } else {
+    defines += [ "CHIP_CONFIG_TC_REQUIRED=0" ]
+  }
+}
+
 buildconfig_header("app_buildconfig") {
   header = "AppBuildConfig.h"
   header_dir = "app"
@@ -519,5 +532,8 @@ static_library("app") {
 
   cflags = [ "-Wconversion" ]
 
-  public_configs = [ "${chip_root}/src:includes" ]
+  public_configs = [
+    ":enhanced_setup_flow_config",
+    "${chip_root}/src:includes",
+  ]
 }

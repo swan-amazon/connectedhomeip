@@ -1,6 +1,6 @@
 /**
  *
- *    Copyright (c) 2021 Project CHIP Authors
+ *    Copyright (c) 2021-2024 Project CHIP Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,6 +27,9 @@
 #include <app/CommandHandler.h>
 #include <app/ConcreteCommandPath.h>
 #include <app/server/CommissioningWindowManager.h>
+#if CHIP_CONFIG_TC_REQUIRED
+#include <app/server/EnhancedSetupFlowProvider.h>
+#endif
 #include <app/server/Server.h>
 #include <app/util/attribute-storage.h>
 #include <lib/support/Span.h>
@@ -69,6 +72,9 @@ private:
     CHIP_ERROR ReadIfSupported(CHIP_ERROR (ConfigurationManager::*getter)(uint8_t &), AttributeValueEncoder & aEncoder);
     CHIP_ERROR ReadBasicCommissioningInfo(AttributeValueEncoder & aEncoder);
     CHIP_ERROR ReadSupportsConcurrentConnection(AttributeValueEncoder & aEncoder);
+    template <typename Provider, typename T>
+    CHIP_ERROR ReadFromProvider(Provider * const aProvider, CHIP_ERROR (Provider::*const aConstGetter)(T &) const,
+                                AttributeValueEncoder & aEncoder);
 };
 
 GeneralCommissioningAttrAccess gAttrAccess;
@@ -95,6 +101,28 @@ CHIP_ERROR GeneralCommissioningAttrAccess::Read(const ConcreteReadAttributePath 
     case SupportsConcurrentConnection::Id: {
         return ReadSupportsConcurrentConnection(aEncoder);
     }
+#if CHIP_CONFIG_TC_REQUIRED
+    case TCAcceptedVersion::Id: {
+        auto provider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+        auto getter   = &EnhancedSetupFlowProvider::GetTermsAndConditionsAcceptedAcknowledgementsVersion;
+        return ReadFromProvider(provider, getter, aEncoder);
+    }
+    case TCMinRequiredVersion::Id: {
+        auto provider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+        auto getter   = &EnhancedSetupFlowProvider::GetTermsAndConditionsRequiredAcknowledgementsVersion;
+        return ReadFromProvider(provider, getter, aEncoder);
+    }
+    case TCAcknowledgements::Id: {
+        auto provider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+        auto getter   = &EnhancedSetupFlowProvider::GetTermsAndConditionsAcceptedAcknowledgements;
+        return ReadFromProvider(provider, getter, aEncoder);
+    }
+    case TCAcknowledgementsRequired::Id: {
+        auto provider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+        auto getter   = &EnhancedSetupFlowProvider::IsTermsAndConditionsAcceptanceRequired;
+        return ReadFromProvider(provider, getter, aEncoder);
+    }
+#endif
     default: {
         break;
     }
@@ -143,6 +171,85 @@ CHIP_ERROR GeneralCommissioningAttrAccess::ReadSupportsConcurrentConnection(Attr
 
     return aEncoder.Encode(supportsConcurrentConnection);
 }
+
+template <typename Provider, typename T>
+CHIP_ERROR GeneralCommissioningAttrAccess::ReadFromProvider(Provider * const aProvider,
+                                                            CHIP_ERROR (Provider::*const aConstGetter)(T &) const,
+                                                            AttributeValueEncoder & aEncoder)
+{
+    if (nullptr == aProvider)
+    {
+        return CHIP_ERROR_PERSISTED_STORAGE_FAILED;
+    }
+
+    T value;
+    CHIP_ERROR err = (aProvider->*aConstGetter)(value);
+    if (err != CHIP_NO_ERROR)
+    {
+        return err;
+    }
+
+    return aEncoder.Encode(value);
+}
+
+#if CHIP_CONFIG_TC_REQUIRED
+CHIP_ERROR checkTermsAndConditionsAcknowledgementsState(CommissioningErrorEnum & errorCode)
+{
+    EnhancedSetupFlowProvider * enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+
+    CHIP_ERROR err;
+
+    uint16_t termsAndConditionsAcceptedAcknowledgements;
+    bool hasRequiredTermAccepted;
+    bool hasRequiredTermVersionAccepted;
+
+    err = enhancedSetupFlowProvider->GetTermsAndConditionsAcceptedAcknowledgements(termsAndConditionsAcceptedAcknowledgements);
+    if (!::chip::ChipError::IsSuccess(err))
+    {
+        ChipLogError(AppServer, "Failed to GetTermsAndConditionsAcceptedAcknowledgements");
+        return err;
+    }
+
+    err = enhancedSetupFlowProvider->HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(hasRequiredTermAccepted);
+    if (!::chip::ChipError::IsSuccess(err))
+    {
+        ChipLogError(AppServer, "Failed to HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted");
+        return err;
+    }
+
+    err =
+        enhancedSetupFlowProvider->HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(hasRequiredTermVersionAccepted);
+    if (!::chip::ChipError::IsSuccess(err))
+    {
+        ChipLogError(AppServer, "Failed to HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted");
+        return err;
+    }
+
+    if (!hasRequiredTermVersionAccepted)
+    {
+        uint16_t requiredAcknowledgementsVersion = 0;
+        (void) enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgementsVersion(requiredAcknowledgementsVersion);
+        ChipLogProgress(AppServer, "Minimum terms and conditions version, 0x%04x, has not been accepted",
+                        requiredAcknowledgementsVersion);
+        errorCode = CommissioningErrorEnum::kTCMinVersionNotMet;
+        return CHIP_NO_ERROR;
+    }
+
+    if (!hasRequiredTermAccepted)
+    {
+        uint16_t requiredAcknowledgements = 0;
+        (void) enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgements(requiredAcknowledgements);
+
+        ChipLogProgress(AppServer, "Required terms and conditions, 0x%04x,have not been accepted", requiredAcknowledgements);
+        errorCode = (0 == termsAndConditionsAcceptedAcknowledgements) ? CommissioningErrorEnum::kTCAcknowledgementsNotReceived
+                                                                      : CommissioningErrorEnum::kRequiredTCNotAccepted;
+        return CHIP_NO_ERROR;
+    }
+
+    errorCode = CommissioningErrorEnum::kOk;
+    return CHIP_NO_ERROR;
+}
+#endif
 
 } // anonymous namespace
 
@@ -239,6 +346,10 @@ bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(
         }
         else
         {
+#if CHIP_CONFIG_TC_REQUIRED
+            CheckSuccess(checkTermsAndConditionsAcknowledgementsState(response.errorCode), Failure);
+#endif
+
             if (failSafe.NocCommandHasBeenInvoked())
             {
                 CHIP_ERROR err = fabricTable.CommitPendingFabricData();
@@ -328,6 +439,30 @@ bool emberAfGeneralCommissioningClusterSetRegulatoryConfigCallback(app::CommandH
     return true;
 }
 
+bool emberAfGeneralCommissioningClusterSetTCAcknowledgementsCallback(
+    chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
+    const chip::app::Clusters::GeneralCommissioning::Commands::SetTCAcknowledgements::DecodableType & commandData)
+{
+#if !CHIP_CONFIG_TC_REQUIRED
+    return false;
+
+#else
+    auto & failSafeContext = Server::GetInstance().GetFailSafeContext();
+
+    MATTER_TRACE_SCOPE("SetTCAcknowledgements", "GeneralCommissioning");
+    Commands::SetTCAcknowledgementsResponse::Type response;
+    EnhancedSetupFlowProvider * const enhancedSetupFlowProvider = Server::GetInstance().GetEnhancedSetupFlowProvider();
+    uint16_t acknowledgements                                   = commandData.TCUserResponse;
+    uint16_t acknowledgementsVersion                            = commandData.TCVersion;
+    CheckSuccess(enhancedSetupFlowProvider->SetTermsAndConditionsAcceptance(acknowledgements, acknowledgementsVersion), Failure);
+    CheckSuccess(checkTermsAndConditionsAcknowledgementsState(response.errorCode), Failure);
+    failSafeContext.SetUpdateTermsAndConditionsHasBeenInvoked();
+    commandObj->AddResponse(commandPath, response);
+    return true;
+
+#endif
+}
+
 namespace {
 void OnPlatformEventHandler(const DeviceLayer::ChipDeviceEvent * event, intptr_t arg)
 {
@@ -335,6 +470,26 @@ void OnPlatformEventHandler(const DeviceLayer::ChipDeviceEvent * event, intptr_t
     {
         // Spec says to reset Breadcrumb attribute to 0.
         Breadcrumb::Set(0, 0);
+
+#if CHIP_CONFIG_TC_REQUIRED
+        if (event->FailSafeTimerExpired.updateTermsAndConditionsHasBeenInvoked)
+        {
+            // Clear terms and conditions acceptance on failsafe timer expiration
+            Server::GetInstance().GetEnhancedSetupFlowProvider()->RevertTermsAndConditionsAcceptance();
+        }
+#endif
+    }
+
+    if (event->Type == DeviceLayer::DeviceEventType::kCommissioningComplete)
+    {
+#if CHIP_CONFIG_TC_REQUIRED
+        auto & failSafeContext = Server::GetInstance().GetFailSafeContext();
+        if (failSafeContext.UpdateTermsAndConditionsHasBeenInvoked())
+        {
+            // Commit terms and conditions acceptance on commissioning complete
+            Server::GetInstance().GetEnhancedSetupFlowProvider()->CommitTermsAndConditionsAcceptance();
+        }
+#endif
     }
 }
 

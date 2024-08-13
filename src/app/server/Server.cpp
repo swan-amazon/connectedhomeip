@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2021 Project CHIP Authors
+ *    Copyright (c) 2021-2024 Project CHIP Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -184,6 +184,11 @@ CHIP_ERROR Server::Init(const ServerInitParams & initParams)
     SetGroupDataProvider(mGroupsProvider);
 
     mReportScheduler = initParams.reportScheduler;
+
+#if CHIP_CONFIG_TC_REQUIRED
+    mTermsAndConditionsProvider = initParams.termsAndConditionsProvider;
+    mEnhancedSetupFlowProvider  = initParams.enhancedSetupFlowProvider;
+#endif
 
     mTestEventTriggerDelegate = initParams.testEventTriggerDelegate;
     if (mTestEventTriggerDelegate == nullptr)
@@ -586,6 +591,9 @@ void Server::ScheduleFactoryReset()
         GetInstance().GetFabricTable().DeleteAllFabrics();
         PlatformMgr().HandleServerShuttingDown();
         ConfigurationMgr().InitiateFactoryReset();
+#if CHIP_CONFIG_TC_REQUIRED
+        // Clear accepted terms and conditions
+#endif
     });
 }
 

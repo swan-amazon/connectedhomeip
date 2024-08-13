@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020 Project CHIP Authors
+ *    Copyright (c) 2020-2024 Project CHIP Authors
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -33,6 +33,12 @@
 #include <app/server/AppDelegate.h>
 #include <app/server/CommissioningWindowManager.h>
 #include <app/server/DefaultAclStorage.h>
+#if CHIP_CONFIG_TC_REQUIRED
+#include <app/server/DefaultEnhancedSetupFlowProvider.h>
+#include <app/server/DefaultTermsAndConditionsProvider.h>
+#include <app/server/EnhancedSetupFlowProvider.h>
+#include <app/server/TermsAndConditionsProvider.h>
+#endif
 #include <credentials/CertificateValidityPolicy.h>
 #include <credentials/FabricTable.h>
 #include <credentials/GroupDataProvider.h>
@@ -179,6 +185,12 @@ struct ServerInitParams
     // Optional. Support for the ICD Check-In BackOff strategy. Must be initialized before being provided.
     // If the ICD Check-In protocol use-case is supported and no strategy is provided, server will use the default strategy.
     app::ICDCheckInBackOffStrategy * icdCheckInBackOffStrategy = nullptr;
+#if CHIP_CONFIG_TC_REQUIRED
+    // Optional. Enhanced setup flow provider to support terms and conditions acceptance check.
+    app::EnhancedSetupFlowProvider * enhancedSetupFlowProvider = nullptr;
+    // Optional. Terms and conditions provider to support enhanced setup flow feature.
+    app::TermsAndConditionsProvider * termsAndConditionsProvider = nullptr;
+#endif
 };
 
 /**
@@ -300,6 +312,24 @@ struct CommonCaseDeviceServerInitParams : public ServerInitParams
         }
 #endif
 
+#if CHIP_CONFIG_TC_REQUIRED
+        static app::DefaultEnhancedSetupFlowProvider sDefaultEnhancedSetupFlowProviderInstance;
+        static app::DefaultTermsAndConditionsProvider sDefaultTermsAndConditionsProviderInstance;
+        if (this->termsAndConditionsProvider == nullptr)
+        {
+            ReturnErrorOnFailure(sDefaultTermsAndConditionsProviderInstance.Init(this->persistentStorageDelegate,
+                                                                                 CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS,
+                                                                                 CHIP_CONFIG_TC_REQUIRED_ACKNOWLEDGEMENTS_VERSION));
+            this->termsAndConditionsProvider = &sDefaultTermsAndConditionsProviderInstance;
+        }
+
+        if (this->enhancedSetupFlowProvider == nullptr)
+        {
+            ReturnErrorOnFailure(sDefaultEnhancedSetupFlowProviderInstance.Init(this->termsAndConditionsProvider));
+            this->enhancedSetupFlowProvider = &sDefaultEnhancedSetupFlowProviderInstance;
+        }
+#endif
+
         return CHIP_NO_ERROR;
     }
 
@@ -401,6 +431,10 @@ public:
     app::DefaultAttributePersistenceProvider & GetDefaultAttributePersister() { return mAttributePersister; }
 
     app::reporting::ReportScheduler * GetReportScheduler() { return mReportScheduler; }
+
+#if CHIP_CONFIG_TC_REQUIRED
+    app::EnhancedSetupFlowProvider * GetEnhancedSetupFlowProvider() { return mEnhancedSetupFlowProvider; }
+#endif
 
 #if CHIP_CONFIG_ENABLE_ICD_SERVER
     app::ICDManager & GetICDManager() { return mICDManager; }
@@ -675,6 +709,10 @@ private:
     GroupDataProviderListener mListener;
     ServerFabricDelegate mFabricDelegate;
     app::reporting::ReportScheduler * mReportScheduler;
+#if CHIP_CONFIG_TC_REQUIRED
+    app::EnhancedSetupFlowProvider * mEnhancedSetupFlowProvider;
+    app::TermsAndConditionsProvider * mTermsAndConditionsProvider;
+#endif
 
     Access::AccessControl mAccessControl;
     app::AclStorage * mAclStorage;
