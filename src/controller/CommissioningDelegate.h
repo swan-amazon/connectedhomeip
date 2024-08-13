@@ -82,6 +82,8 @@ enum CommissioningStage : uint8_t
     kPrimaryOperationalNetworkFailed, ///< Indicate that the primary operational network (on root endpoint) failed, should disable
                                       ///< the primary network interface later.
     kDisablePrimaryNetworkInterface,  ///< Send InterfaceEnabled write request to the device to disable network interface.
+    kGetTCAcknowledgments,            ///< Waiting for the higher layer to provide terms and conditions acknowledgements.
+    kConfigureTCAcknowledgments,      ///< Send SetTCAcknowledgements (0x30:6) command to the device
 };
 
 enum class ICDRegistrationStrategy : uint8_t
@@ -102,6 +104,12 @@ struct WiFiCredentials
     ByteSpan ssid;
     ByteSpan credentials;
     WiFiCredentials(ByteSpan newSsid, ByteSpan newCreds) : ssid(newSsid), credentials(newCreds) {}
+};
+
+struct TermsAndConditionsAcknowledgement
+{
+    uint16_t acceptedTermsAndConditions;
+    uint16_t acceptedTermsAndConditionsVersion;
 };
 
 struct NOCChainGenerationParameters
@@ -167,6 +175,13 @@ public:
 
     // The country code to be used for the node, if set.
     Optional<CharSpan> GetCountryCode() const { return mCountryCode; }
+
+    bool GetRequireTermsAndConditionsAcknowledgement() const { return mRequireTermsAndConditionsAcknowledgement; }
+
+    Optional<TermsAndConditionsAcknowledgement> GetTermsAndConditionsAcknowledgement() const
+    {
+        return mTermsAndConditionsAcknowledgement;
+    }
 
     // Time zone to set for the node
     // If required, this will be truncated to fit the max size allowable on the node
@@ -337,6 +352,19 @@ public:
     CommissioningParameters & SetCountryCode(CharSpan countryCode)
     {
         mCountryCode.SetValue(countryCode);
+        return *this;
+    }
+
+    CommissioningParameters & SetRequireTermsAndConditionsAcknowledgement(bool requireTermsAndConditionsAcknowledgement)
+    {
+        mRequireTermsAndConditionsAcknowledgement = requireTermsAndConditionsAcknowledgement;
+        return *this;
+    }
+
+    CommissioningParameters &
+    SetTermsAndConditionsAcknowledgement(TermsAndConditionsAcknowledgement termsAndConditionsAcknowledgement)
+    {
+        mTermsAndConditionsAcknowledgement.SetValue(termsAndConditionsAcknowledgement);
         return *this;
     }
 
@@ -581,6 +609,7 @@ public:
         mAttestationNonce.ClearValue();
         mWiFiCreds.ClearValue();
         mCountryCode.ClearValue();
+        mTermsAndConditionsAcknowledgement.ClearValue();
         mThreadOperationalDataset.ClearValue();
         mNOCChainGenerationParameters.ClearValue();
         mRootCert.ClearValue();
@@ -611,6 +640,7 @@ private:
     Optional<ByteSpan> mAttestationNonce;
     Optional<WiFiCredentials> mWiFiCreds;
     Optional<CharSpan> mCountryCode;
+    Optional<TermsAndConditionsAcknowledgement> mTermsAndConditionsAcknowledgement;
     Optional<ByteSpan> mThreadOperationalDataset;
     Optional<NOCChainGenerationParameters> mNOCChainGenerationParameters;
     Optional<ByteSpan> mRootCert;
@@ -643,6 +673,7 @@ private:
     Optional<uint32_t> mICDStayActiveDurationMsec;
     ICDRegistrationStrategy mICDRegistrationStrategy = ICDRegistrationStrategy::kIgnore;
     bool mCheckForMatchingFabric                     = false;
+    bool mRequireTermsAndConditionsAcknowledgement   = false;
 };
 
 struct RequestedCertificate
