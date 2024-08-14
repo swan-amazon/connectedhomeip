@@ -7852,11 +7852,15 @@ endpoint 0 {
     callback attribute regulatoryConfig;
     callback attribute locationCapability;
     callback attribute supportsConcurrentConnection;
+    ram      attribute TCAcceptedVersion;
+    ram      attribute TCMinRequiredVersion default = 1;
+    ram      attribute TCAcknowledgements default = 0x0000;
+    ram      attribute TCAcknowledgementsRequired default = true;
     callback attribute generatedCommandList;
     callback attribute acceptedCommandList;
     callback attribute eventList;
     callback attribute attributeList;
-    ram      attribute featureMap default = 0;
+    ram      attribute featureMap default = 1;
     ram      attribute clusterRevision default = 1;
 
     handle command ArmFailSafe;
@@ -7865,6 +7869,8 @@ endpoint 0 {
     handle command SetRegulatoryConfigResponse;
     handle command CommissioningComplete;
     handle command CommissioningCompleteResponse;
+    handle command SetTCAcknowledgements;
+    handle command SetTCAcknowledgementsResponse;
   }
 
   server cluster NetworkCommissioning {
