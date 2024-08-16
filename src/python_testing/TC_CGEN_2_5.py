@@ -183,7 +183,7 @@ class TC_CGEN_2_5(MatterBaseTest):
         self.th1.ResetTestCommissioner()
         self.th1.ExpireSessions(self.dut_node_id)
 
-        # Don't set TCs for the next commissioning and skip CommissioningComplete so we can check the error code
+        # Don't set TCs for the next commissioning and skip CommissioningComplete so we can manually call CommissioningComplete in order to check the response error code
         self.th1.SetTCRequired(False)
         self.th1.SetTCAcknowledgements(0, 0)
         self.th1.SetSkipCommissioningComplete(True)
