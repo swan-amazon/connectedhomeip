@@ -225,6 +225,16 @@ CHIP_ERROR checkTermsAndConditionsAcknowledgementsState(CommissioningErrorEnum &
         return err;
     }
 
+    if (!hasRequiredTermVersionAccepted)
+    {
+        uint16_t requiredAcknowledgementsVersion = 0;
+        (void) enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgementsVersion(requiredAcknowledgementsVersion);
+        ChipLogProgress(AppServer, "Minimum terms and conditions version, 0x%04x, has not been accepted",
+                        requiredAcknowledgementsVersion);
+        errorCode = CommissioningErrorEnum::kTCMinVersionNotMet;
+        return CHIP_NO_ERROR;
+    }
+
     if (!hasRequiredTermAccepted)
     {
         uint16_t requiredAcknowledgements = 0;
@@ -233,16 +243,6 @@ CHIP_ERROR checkTermsAndConditionsAcknowledgementsState(CommissioningErrorEnum &
         ChipLogProgress(AppServer, "Required terms and conditions, 0x%04x,have not been accepted", requiredAcknowledgements);
         errorCode = (0 == termsAndConditionsAcceptedAcknowledgements) ? CommissioningErrorEnum::kTCAcknowledgementsNotReceived
                                                                       : CommissioningErrorEnum::kRequiredTCNotAccepted;
-        return CHIP_NO_ERROR;
-    }
-
-    if (!hasRequiredTermVersionAccepted)
-    {
-        uint16_t requiredAcknowledgementsVersion = 0;
-        (void) enhancedSetupFlowProvider->GetTermsAndConditionsRequiredAcknowledgementsVersion(requiredAcknowledgementsVersion);
-        ChipLogProgress(AppServer, "Minimum terms and conditions version, 0x%04x, has not been accepted",
-                        requiredAcknowledgementsVersion);
-        errorCode = CommissioningErrorEnum::kTCMinVersionNotMet;
         return CHIP_NO_ERROR;
     }
 
