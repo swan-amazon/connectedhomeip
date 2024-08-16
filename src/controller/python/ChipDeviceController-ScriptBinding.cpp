@@ -181,6 +181,9 @@ PyChipError pychip_DeviceController_OpenCommissioningWindow(chip::Controller::De
 
 bool pychip_DeviceController_GetIPForDiscoveredDevice(chip::Controller::DeviceCommissioner * devCtrl, int idx, char * addrStr,
                                                       uint32_t len);
+PyChipError pychip_DeviceController_SetRequireTermsAndConditionsAcknowledgement(bool tcRequired);
+PyChipError pychip_DeviceController_SetTermsAcknowledgements(uint16_t tcVersion, uint16_t tcUserResponse);
+PyChipError pychip_DeviceController_SetSkipCommissioningComplete(bool skipCommissioningComplete);
 
 // Pairing Delegate
 PyChipError
@@ -570,6 +573,29 @@ PyChipError pychip_DeviceController_SetDefaultNtp(const char * defaultNTP)
     return ToPyChipError(CHIP_NO_ERROR);
 }
 
+
+PyChipError pychip_DeviceController_SetRequireTermsAndConditionsAcknowledgement(bool tcRequired)
+{
+    sCommissioningParameters.SetRequireTermsAndConditionsAcknowledgement(tcRequired);
+    return ToPyChipError(CHIP_NO_ERROR);
+}
+
+PyChipError pychip_DeviceController_SetTermsAcknowledgements(uint16_t tcVersion, uint16_t tcUserResponse)
+{
+    sCommissioningParameters.SetTermsAndConditionsAcknowledgement({
+        .acceptedTermsAndConditions = tcUserResponse,
+        .acceptedTermsAndConditionsVersion      = tcVersion
+    });
+    return ToPyChipError(CHIP_NO_ERROR);
+}
+
+PyChipError
+pychip_DeviceController_SetSkipCommissioningComplete(bool skipCommissioningComplete)
+{
+    sCommissioningParameters.SetSkipCommissioningComplete(skipCommissioningComplete);
+    return ToPyChipError(CHIP_NO_ERROR);
+}
+
 PyChipError pychip_DeviceController_SetTrustedTimeSource(chip::NodeId nodeId, chip::EndpointId endpoint)
 {
     chip::app::Clusters::TimeSynchronization::Structs::FabricScopedTrustedTimeSourceStruct::Type timeSource = { .nodeID = nodeId,
@@ -839,11 +865,7 @@ PyChipError pychip_IsSessionOverTCPConnection(chip::OperationalDeviceProxy * dev
     VerifyOrReturnError(deviceProxy->GetSecureSession().HasValue(), ToPyChipError(CHIP_ERROR_MISSING_SECURE_SESSION));
     VerifyOrReturnError(isSessionOverTCP != nullptr, ToPyChipError(CHIP_ERROR_INVALID_ARGUMENT));
 
-#if INET_CONFIG_ENABLE_TCP_ENDPOINT
     *isSessionOverTCP = deviceProxy->GetSecureSession().Value()->AsSecureSession()->GetTCPConnection() != nullptr;
-#else
-    *isSessionOverTCP = false;
-#endif
 
     return ToPyChipError(CHIP_NO_ERROR);
 }
@@ -863,7 +885,6 @@ PyChipError pychip_IsActiveSession(chip::OperationalDeviceProxy * deviceProxy, b
 
 PyChipError pychip_CloseTCPConnectionWithPeer(chip::OperationalDeviceProxy * deviceProxy)
 {
-#if INET_CONFIG_ENABLE_TCP_ENDPOINT
     VerifyOrReturnError(deviceProxy->GetSecureSession().HasValue(), ToPyChipError(CHIP_ERROR_MISSING_SECURE_SESSION));
     VerifyOrReturnError(deviceProxy->GetSecureSession().Value()->AsSecureSession()->AllowsLargePayload(),
                         ToPyChipError(CHIP_ERROR_INVALID_ARGUMENT));
@@ -872,9 +893,6 @@ PyChipError pychip_CloseTCPConnectionWithPeer(chip::OperationalDeviceProxy * dev
         deviceProxy->GetSecureSession().Value()->AsSecureSession()->GetTCPConnection(), /* shouldAbort = */ false);
 
     return ToPyChipError(CHIP_NO_ERROR);
-#else
-    return ToPyChipError(CHIP_ERROR_NOT_IMPLEMENTED);
-#endif
 }
 
 PyChipError pychip_FreeOperationalDeviceProxy(chip::OperationalDeviceProxy * deviceProxy)

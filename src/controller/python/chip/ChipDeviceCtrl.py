@@ -1351,12 +1351,8 @@ class ChipDeviceControllerBase():
         # Wildcard attribute id
         typing.Tuple[int, typing.Type[ClusterObjects.Cluster]],
         # Concrete path
-        typing.Tuple[int, typing.Type[ClusterObjects.ClusterAttributeDescriptor]],
-        # Directly specified attribute path
-        ClusterAttribute.AttributePath
+        typing.Tuple[int, typing.Type[ClusterObjects.ClusterAttributeDescriptor]]
     ]):
-        if isinstance(pathTuple, ClusterAttribute.AttributePath):
-            return pathTuple
         if pathTuple == ('*') or pathTuple == ():
             # Wildcard
             return ClusterAttribute.AttributePath()
@@ -1441,9 +1437,7 @@ class ChipDeviceControllerBase():
         # Wildcard attribute id
         typing.Tuple[int, typing.Type[ClusterObjects.Cluster]],
         # Concrete path
-        typing.Tuple[int, typing.Type[ClusterObjects.ClusterAttributeDescriptor]],
-        # Directly specified attribute path
-        ClusterAttribute.AttributePath
+        typing.Tuple[int, typing.Type[ClusterObjects.ClusterAttributeDescriptor]]
     ]]] = None,
         dataVersionFilters: typing.Optional[typing.List[typing.Tuple[int, typing.Type[ClusterObjects.Cluster], int]]] = None, events: typing.Optional[typing.List[
             typing.Union[
@@ -1481,8 +1475,6 @@ class ChipDeviceControllerBase():
                 ReadAttribute(1, [ 1 ] ) -- case 4 above.
                 ReadAttribute(1, [ Clusters.BasicInformation ] ) -- case 5 above.
                 ReadAttribute(1, [ (1, Clusters.BasicInformation.Attributes.Location ] ) -- case 1 above.
-
-            An AttributePath can also be specified directly by [chip.cluster.Attribute.AttributePath(...)]
 
         dataVersionFilters: A list of tuples of (endpoint, cluster, data version).
 
@@ -1551,9 +1543,7 @@ class ChipDeviceControllerBase():
         # Wildcard attribute id
         typing.Tuple[int, typing.Type[ClusterObjects.Cluster]],
         # Concrete path
-        typing.Tuple[int, typing.Type[ClusterObjects.ClusterAttributeDescriptor]],
-        # Directly specified attribute path
-        ClusterAttribute.AttributePath
+        typing.Tuple[int, typing.Type[ClusterObjects.ClusterAttributeDescriptor]]
     ]]], dataVersionFilters: typing.Optional[typing.List[typing.Tuple[int, typing.Type[ClusterObjects.Cluster], int]]] = None,
             returnClusterObject: bool = False,
             reportInterval: typing.Optional[typing.Tuple[int, int]] = None,
@@ -1577,8 +1567,6 @@ class ChipDeviceControllerBase():
                 ReadAttribute(1, [ 1 ] ) -- case 4 above.
                 ReadAttribute(1, [ Clusters.BasicInformation ] ) -- case 5 above.
                 ReadAttribute(1, [ (1, Clusters.BasicInformation.Attributes.Location ] ) -- case 1 above.
-
-            An AttributePath can also be specified directly by [chip.cluster.Attribute.AttributePath(...)]
 
         returnClusterObject: This returns the data as consolidated cluster objects, with all attributes for a cluster inside
                              a single cluster-wide cluster object.
@@ -1938,6 +1926,16 @@ class ChipDeviceControllerBase():
             self._dmLib.pychip_DeviceProxy_GetRemoteSessionParameters.restype = PyChipError
             self._dmLib.pychip_DeviceProxy_GetRemoteSessionParameters.argtypes = [c_void_p, c_char_p]
 
+            self._dmLib.pychip_DeviceController_SetSkipCommissioningComplete.restype = PyChipError
+            self._dmLib.pychip_DeviceController_SetSkipCommissioningComplete.argtypes = [c_bool]
+
+            self._dmLib.pychip_DeviceController_SetRequireTermsAndConditionsAcknowledgement.restype = PyChipError
+            self._dmLib.pychip_DeviceController_SetRequireTermsAndConditionsAcknowledgement.argtypes = [c_bool]
+
+            self._dmLib.pychip_DeviceController_SetTermsAcknowledgements.restype = PyChipError
+            self._dmLib.pychip_DeviceController_SetTermsAcknowledgements.argtypes = [c_uint16, c_uint16]
+
+
 
 class ChipDeviceController(ChipDeviceControllerBase):
     ''' The ChipDeviceCommissioner binding, named as ChipDeviceController
@@ -2064,6 +2062,27 @@ class ChipDeviceController(ChipDeviceControllerBase):
         self.CheckIsActive()
         self._ChipStack.Call(
             lambda: self._dmLib.pychip_DeviceController_SetDSTOffset(offset, validStarting, validUntil)
+        ).raise_on_error()
+
+    def SetTCRequired(self, tcRequired: bool):
+        ''' Set whether TC Acknowledgements should be set during commissioning'''
+        self.CheckIsActive()
+        self._ChipStack.Call(
+            lambda: self._dmLib.pychip_DeviceController_SetRequireTermsAndConditionsAcknowledgement(tcRequired)
+        ).raise_on_error()
+
+    def SetTCAcknowledgements(self, tcAcceptedVersion: int, tcUserResponse: int):
+        ''' Set the TC acknowledgements to set during commissioning'''
+        self.CheckIsActive()
+        self._ChipStack.Call(
+            lambda: self._dmLib.pychip_DeviceController_SetTermsAcknowledgements(tcAcceptedVersion, tcUserResponse)
+        ).raise_on_error()
+
+    def SetSkipCommissioningComplete(self, skipCommissioningComplete: bool):
+        ''' Set whether to skip the commissioning complete callback'''
+        self.CheckIsActive()
+        self._ChipStack.Call(
+            lambda: self._dmLib.pychip_DeviceController_SetSkipCommissioningComplete(skipCommissioningComplete)
         ).raise_on_error()
 
     def SetDefaultNTP(self, defaultNTP: str):

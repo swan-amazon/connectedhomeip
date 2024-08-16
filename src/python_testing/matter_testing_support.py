@@ -27,7 +27,6 @@ import queue
 import random
 import re
 import sys
-import textwrap
 import time
 import typing
 import uuid
@@ -54,7 +53,6 @@ import chip.logging
 import chip.native
 from chip import discovery
 from chip.ChipStack import ChipStack
-from chip.clusters import Attribute
 from chip.clusters import ClusterObjects as ClusterObjects
 from chip.clusters.Attribute import EventReadResult, SubscriptionTransaction, TypedAttributePath
 from chip.exceptions import ChipStackError
@@ -331,7 +329,7 @@ class AttributeChangeCallback:
             logging.info(
                 f"[AttributeChangeCallback] Got attribute subscription report. Attribute {path.AttributeType}. Updated value: {attribute_value}. SubscriptionId: {transaction.subscriptionId}")
         except KeyError:
-            asserts.fail(f"[AttributeChangeCallback] Attribute {self._expected_attribute} not found in returned report")
+            asserts.fail("[AttributeChangeCallback] Attribute {expected_attribute} not found in returned report")
 
 
 def await_sequence_of_reports(report_queue: queue.Queue, endpoint_id: int, attribute: TypedAttributePath, sequence: list[Any], timeout_sec: float):
@@ -546,6 +544,10 @@ class MatterTestConfig:
     chip_tool_credentials_path: Optional[pathlib.Path] = None
 
     trace_to: List[str] = field(default_factory=list)
+
+    # Accepted Terms and Conditions if used
+    tc_version: int = None
+    tc_user_response: int = None
 
 
 class ClusterMapper:
@@ -1124,59 +1126,11 @@ class MatterBaseTest(base_test.BaseTestClass):
         self.failed = True
         if self.runner_hook and not self.is_commissioning:
             exception = record.termination_signal.exception
-
-            try:
-                step_duration = (datetime.now(timezone.utc) - self.step_start_time) / timedelta(microseconds=1)
-            except AttributeError:
-                # If we failed during setup, these may not be populated
-                step_duration = 0
-            try:
-                test_duration = (datetime.now(timezone.utc) - self.test_start_time) / timedelta(microseconds=1)
-            except AttributeError:
-                test_duration = 0
+            step_duration = (datetime.now(timezone.utc) - self.step_start_time) / timedelta(microseconds=1)
+            test_duration = (datetime.now(timezone.utc) - self.test_start_time) / timedelta(microseconds=1)
             # TODO: I have no idea what logger, logs, request or received are. Hope None works because I have nothing to give
             self.runner_hook.step_failure(logger=None, logs=None, duration=step_duration, request=None, received=None)
             self.runner_hook.test_stop(exception=exception, duration=test_duration)
-
-            def extract_error_text() -> tuple[str, str]:
-                no_stack_trace = ("Stack Trace Unavailable", "")
-                if not record.termination_signal.stacktrace:
-                    return no_stack_trace
-                trace = record.termination_signal.stacktrace.splitlines()
-                if not trace:
-                    return no_stack_trace
-
-                if isinstance(exception, signals.TestError):
-                    # Exception gets raised by the mobly framework, so the proximal error is one line back in the stack trace
-                    assert_candidates = [idx for idx, line in enumerate(trace) if "asserts" in line and "asserts.py" not in line]
-                    if not assert_candidates:
-                        return "Unknown error, please see stack trace above", ""
-                    assert_candidate_idx = assert_candidates[-1]
-                else:
-                    # Normal assert is on the Last line
-                    assert_candidate_idx = -1
-                probable_error = trace[assert_candidate_idx]
-
-                # Find the file marker immediately above the probable error
-                file_candidates = [idx for idx, line in enumerate(trace[:assert_candidate_idx]) if "File" in line]
-                if not file_candidates:
-                    return probable_error, "Unknown file"
-                return probable_error.strip(), trace[file_candidates[-1]].strip()
-
-            probable_error, probable_file = extract_error_text()
-            logging.error(textwrap.dedent(f"""
-
-                                          ******************************************************************
-                                          *
-                                          * Test {self.current_test_info.name} failed for the following reason:
-                                          * {exception}
-                                          *
-                                          * {probable_file}
-                                          * {probable_error}
-                                          *
-                                          *******************************************************************
-
-                                          """))
 
     def on_pass(self, record):
         ''' Called by Mobly on test pass
@@ -1640,6 +1594,9 @@ def convert_args_to_matter_config(args: argparse.Namespace) -> MatterTestConfig:
     config.controller_node_id = args.controller_node_id
     config.trace_to = args.trace_to
 
+    config.tc_version = args.tc_version
+    config.tc_user_response = args.tc_user_response
+
     # Accumulate all command-line-passed named args
     all_global_args = []
     argsets = [item for item in (args.int_arg, args.float_arg, args.string_arg, args.json_arg,
@@ -1732,6 +1689,10 @@ def parse_matter_test_args(argv: Optional[List[str]] = None) -> MatterTestConfig
 
     commission_group.add_argument('--commission-only', action="store_true", default=False,
                                   help="If true, test exits after commissioning without running subsequent tests")
+
+    commission_group.add_argument('--tc-version', type=int, help="Terms and conditions version")
+
+    commission_group.add_argument('--tc-user-response', type=int, help="Terms and conditions acknowledgements")
 
     code_group = parser.add_mutually_exclusive_group(required=False)
 
@@ -1913,7 +1874,7 @@ async def get_accepted_endpoints_for_test(self: MatterBaseTest, accept_function:
 
         Returns a list of endpoints on which the test should be run given the accept_function for the test.
     """
-    wildcard = await self.default_controller.Read(self.dut_node_id, [(Clusters.Descriptor), Attribute.AttributePath(None, None, GlobalAttributeIds.ATTRIBUTE_LIST_ID), Attribute.AttributePath(None, None, GlobalAttributeIds.FEATURE_MAP_ID), Attribute.AttributePath(None, None, GlobalAttributeIds.ACCEPTED_COMMAND_LIST_ID)])
+    wildcard = await self.default_controller.Read(self.dut_node_id, [()])
     return [e for e in wildcard.attributes.keys() if accept_function(wildcard, e)]
 
 
@@ -2002,6 +1963,13 @@ class CommissionDeviceTest(MatterBaseTest):
         conf = self.matter_test_config
 
         info = self.get_setup_payload_info()[i]
+
+        if conf.tc_version is not None and conf.tc_user_response is not None:
+            logging.debug(f"Setting TC Acknowledgements to version {conf.tc_version} with user response {conf.tc_user_response}.")
+            dev_ctrl.SetTCAcknowledgements(conf.tc_version, conf.tc_user_response)
+            dev_ctrl.SetTCRequired(True)
+        else:
+            dev_ctrl.SetTCRequired(False)
 
         if conf.commissioning_method == "on-network":
             try:
