@@ -200,8 +200,17 @@ CHIP_ERROR checkTermsAndConditionsAcknowledgementsState(CommissioningErrorEnum &
     CHIP_ERROR err;
 
     uint16_t termsAndConditionsAcceptedAcknowledgements;
+    bool hasAnyAcknowledgements;
     bool hasRequiredTermAccepted;
     bool hasRequiredTermVersionAccepted;
+
+    err = enhancedSetupFlowProvider->HasReceivedTermsAndConditionscknowledgements(hasAnyAcknowledgements);
+    if (!::chip::ChipError::IsSuccess(err))
+    {
+        ChipLogError(AppServer, "Failed to HasReceivedTermsAndConditionscknowledgements");
+        errorCode = CommissioningErrorEnum::kTCAcknowledgementsNotReceived;
+        return err;
+    }
 
     err = enhancedSetupFlowProvider->GetTermsAndConditionsAcceptedAcknowledgements(termsAndConditionsAcceptedAcknowledgements);
     if (!::chip::ChipError::IsSuccess(err))

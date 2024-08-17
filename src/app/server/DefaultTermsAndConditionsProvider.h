@@ -47,6 +47,8 @@ public:
 
     CHIP_ERROR GetRequirements(uint16_t & outAcknowledgementsValue, uint16_t & outAcknowledgementsVersionValue) const override;
 
+    CHIP_ERROR HasAcceptance(bool & outHasAcceptance) const override;
+
     CHIP_ERROR ResetAcceptance() override;
 
     CHIP_ERROR RevertAcceptance() override;

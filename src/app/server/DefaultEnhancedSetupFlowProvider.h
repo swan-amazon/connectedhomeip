@@ -39,6 +39,8 @@ public:
      */
     CHIP_ERROR Init(TermsAndConditionsProvider * const inTermsAndConditionsProvider);
 
+    CHIP_ERROR HasReceivedTermsAndConditionscknowledgements(bool & outReceived) const override;
+
     CHIP_ERROR HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(bool & outAccepted) const override;
 
     CHIP_ERROR HasTermsAndConditionsRequiredAcknowledgementsVersionBeenAccepted(bool & outAccepted) const override;

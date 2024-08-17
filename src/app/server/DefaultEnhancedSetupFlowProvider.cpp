@@ -30,6 +30,13 @@ CHIP_ERROR chip::app::DefaultEnhancedSetupFlowProvider::Init(TermsAndConditionsP
     return CHIP_NO_ERROR;
 }
 
+CHIP_ERROR chip::app::DefaultEnhancedSetupFlowProvider::HasReceivedTermsAndConditionscknowledgements(bool & outReceived) const
+{
+    VerifyOrReturnError(nullptr != mTermsAndConditionsProvider, CHIP_ERROR_UNINITIALIZED);
+    ReturnErrorOnFailure(mTermsAndConditionsProvider->HasAcceptance(outReceived));
+    return CHIP_NO_ERROR;
+}
+
 CHIP_ERROR
 chip::app::DefaultEnhancedSetupFlowProvider::HasTermsAndConditionsRequiredAcknowledgementsBeenAccepted(bool & outAccepted) const
 {

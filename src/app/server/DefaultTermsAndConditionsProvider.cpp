@@ -115,6 +115,14 @@ CHIP_ERROR chip::app::DefaultTermsAndConditionsProvider::GetRequirements(uint16_
     return CHIP_NO_ERROR;
 }
 
+CHIP_ERROR chip::app::DefaultTermsAndConditionsProvider::HasAcceptance(bool & outHasAcceptance) const
+{
+    outHasAcceptance =
+        mTemporaryAcknowledgementsAcceptanceValue.HasValue() && mTemporaryAcknowledgementsAcceptanceVersionValue.HasValue();
+
+    return CHIP_NO_ERROR;
+}
+
 CHIP_ERROR chip::app::DefaultTermsAndConditionsProvider::ResetAcceptance()
 {
     VerifyOrReturnError(nullptr != mPersistentStorageDelegate, CHIP_ERROR_UNINITIALIZED);

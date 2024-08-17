@@ -61,6 +61,13 @@ public:
     virtual CHIP_ERROR GetRequirements(uint16_t & outAcknowledgementsValue, uint16_t & outAcknowledgementsVersionValue) const = 0;
 
     /**
+     * @brief Retrieve if any terms and conditions has been set.
+     *
+     * @param[out] outHasAcceptance True if any acceptance has been set.
+     */
+    virtual CHIP_ERROR HasAcceptance(bool & outHasAcceptance) const = 0;
+
+    /**
      * @brief Reset the persisted acceptance status of the required terms and conditions.
      */
     virtual CHIP_ERROR ResetAcceptance() = 0;
