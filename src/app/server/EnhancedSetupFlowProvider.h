@@ -33,6 +33,8 @@ class EnhancedSetupFlowProvider
 public:
     virtual ~EnhancedSetupFlowProvider() = default;
 
+    virtual CHIP_ERROR HasReceivedTermsAndConditionscknowledgements(bool & outReceived) const = 0;
+
     /**
      * @param[out] outAccepted true if the required acknowledgements have been accepted, false otherwise.
      */
