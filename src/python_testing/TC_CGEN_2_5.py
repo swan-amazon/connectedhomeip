@@ -143,20 +143,20 @@ class TC_CGEN_2_5(MatterBaseTest):
         logging.info('Step 8 - TH sends ArmFailSafe with ExpiryLengthSeconds set to 60')
         cmd = Clusters.GeneralCommissioning.Commands.ArmFailSafe(60)
         resp = await self.th1.SendCommand(nodeid=self.dut_node_id, endpoint=0, payload=cmd, timedRequestTimeoutMs=6000)
-        asserts.assert_equal(resp.errorCode, Clusters.GeneralCommissioning.Enums.CommissioningErrorEnum.kNoError,
+        asserts.assert_equal(resp.errorCode, Clusters.GeneralCommissioning.Enums.CommissioningErrorEnum.kOk,
                              'Incorrect error code')
 
         logging.info('Step 9 - TH sends SetTCAcknowledgements with incremented TCVersion')
         new_accepted_version += 1
         cmd = Clusters.GeneralCommissioning.Commands.SetTCAcknowledgements(new_accepted_version, new_acknowledgements)
         resp = await self.th1.SendCommand(nodeid=self.dut_node_id, endpoint=0, payload=cmd, timedRequestTimeoutMs=6000)
-        asserts.assert_equal(resp.errorCode, Clusters.GeneralCommissioning.Enums.CommissioningErrorEnum.kNoError,
+        asserts.assert_equal(resp.errorCode, Clusters.GeneralCommissioning.Enums.CommissioningErrorEnum.kOk,
                              'Incorrect error code')
 
         logging.info('Step 10 - TH sends ArmFailSafe with ExpiryLengthSeconds set to 0')
         cmd = Clusters.GeneralCommissioning.Commands.ArmFailSafe(0)
         resp = await self.th1.SendCommand(nodeid=self.dut_node_id, endpoint=0, payload=cmd, timedRequestTimeoutMs=6000)
-        asserts.assert_equal(resp.errorCode, Clusters.GeneralCommissioning.Enums.CommissioningErrorEnum.kNoError,
+        asserts.assert_equal(resp.errorCode, Clusters.GeneralCommissioning.Enums.CommissioningErrorEnum.kOk,
                              'Incorrect error code')
 
         self.verify_tc_attributes(new_accepted_version, new_acknowledgements)
@@ -183,7 +183,7 @@ class TC_CGEN_2_5(MatterBaseTest):
         self.th1.ResetTestCommissioner()
         self.th1.ExpireSessions(self.dut_node_id)
 
-        # Don't set TCs for the next commissioning and skip CommissioningComplete so we can check the error code
+        # Don't set TCs for the next commissioning and skip CommissioningComplete so we can manually call CommissioningComplete in order to check the response error code
         self.th1.SetTCRequired(False)
         self.th1.SetTCAcknowledgements(0, 0)
         self.th1.SetSkipCommissioningComplete(True)
