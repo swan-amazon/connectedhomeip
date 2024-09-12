@@ -1,4 +1,7 @@
 {
+    "python.autoComplete.extraPaths": [
+        "src/controller/python"
+    ],
     "C_Cpp.intelliSenseEngineFallback": "Enabled",
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/build/default/src/",
