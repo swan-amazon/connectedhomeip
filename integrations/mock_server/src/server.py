@@ -87,11 +87,11 @@ def run_server(port: int, config_path: Path, routing_config_dir: Path, cert_path
     httpd = http.server.ThreadingHTTPServer(server_address, theMockServerHandler)
 
     logging.info("Server starting on port %s", port)
-    with context.wrap_socket(httpd.socket, server_side=True) as httpd.socket:
-        logging.info("Server started on port %s", port)
-        logging.info("HTTPS enabled with cert: %s and key: %s", cert_path, key_path)
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt:
-            logging.info("Server is shutting down due to keyboard interrupt.")
-            httpd.server_close()
+    # Remove the SSL context wrapper
+    logging.info("Server started on port %s", port)
+    logging.info("HTTP server enabled (no SSL)")
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        logging.info("Server is shutting down due to keyboard interrupt.")
+        httpd.server_close()

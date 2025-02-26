@@ -25,15 +25,15 @@
             "program": "${workspaceFolder}/integrations/mock_server/src/main.py",
             "args": [
                 "--port",
-                "8443",
+                "40357",
                 "--config",
                 "${workspaceFolder}/integrations/mock_server/configurations/server_config.json",
                 "--routing-config-dir",
-                "${workspaceFolder}/integrations/mock_server/configurations/fake_distributed_compliance_ledger",
+                "${workspaceFolder}/../fake_gordon_service",
                 "--cert",
-                "${workspaceFolder}/server.crt",
+                "${workspaceFolder}/../server.crt",
                 "--key",
-                "${workspaceFolder}/server.key"
+                "${workspaceFolder}/../server.key"
             ],
             "console": "integratedTerminal"
         },
