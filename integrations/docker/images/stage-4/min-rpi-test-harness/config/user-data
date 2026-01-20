@@ -1,0 +1,68 @@
+#cloud-config
+
+# This is the user-data configuration file for cloud-init. By default this sets
+# up an initial user called "ubuntu" with password "ubuntu", which must be
+# changed at first login. However, many additional actions can be initiated on
+# first boot from this file. The cloud-init documentation has more details:
+#
+# https://cloudinit.readthedocs.io/
+#
+# Please note that the YAML format employed by this file is sensitive to
+# differences in whitespace; if you are editing this file in an editor (like
+# Notepad) which uses literal tabs, take care to only use spaces for
+# indentation. See the following link for more details:
+#
+# https://en.wikipedia.org/wiki/YAML
+#
+# Some additional examples are provided in comments below the default
+# configuration.
+
+# On first boot, set the (default) ubuntu user's password to "ubuntu" and
+# expire user passwords
+chpasswd:
+  expire: true
+  users:
+  - name: ubuntu
+    password: ubuntu
+    type: text
+
+## Set the system's hostname. Please note that, unless you have a local DNS
+## setup where the hostname is derived from DHCP requests (as with dnsmasq),
+## setting the hostname here will not make the machine reachable by this name.
+## You may also wish to install avahi-daemon (see the "packages:" key below)
+## to make your machine reachable by the .local domain
+hostname: matter-test
+
+# Controls password authentication with the SSH daemon; the default here
+# prevents logging into SSH with a password. Changing this is a security risk
+# and you should at the very least ensure a different default password is
+# specified above
+ssh_pwauth: true
+
+## Install additional packages on first boot
+packages:
+  - avahi-daemon
+  - avahi-discover
+  - avahi-utils
+  - curl
+  - libavahi-client-dev
+  - libc6
+  - libcairo2-dev
+  - libdbus-1-dev
+  - libnss-mdns
+  - libssl-dev
+  - libstdc++6
+  - mdns-scan
+  - python3
+  - python3-dev
+  - python3-pip
+  - sudo
+  - tar
+  - tcpdump
+  - unzip
+  - vim
+  - wget
+  - zlib1g-dev
+
+# Simple final message
+final_message: "Ubuntu Matter test image is ready. Login: ubuntu/ubuntu"

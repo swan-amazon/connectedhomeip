@@ -1,0 +1,14 @@
+# Build artifacts
+cache/
+work/
+output/
+
+# Keep config directory but ignore any local overrides
+config/*.local
+
+# Editor files
+*.swp
+*.swo
+*~
+.DS_Store
+.kiro/
